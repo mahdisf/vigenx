@@ -1,0 +1,39 @@
+# --- Video editing and exporting ---
+opencv-python==4.10.0.84
+
+# --- Download from internet (YouTube etc.) ---
+yt-dlp
+
+# --- AI transcription ---
+openai-whisper
+torch
+torchaudio
+torchvision
+
+# --- Silence detection ---
+librosa
+
+# --- Subtitle formatting ---
+srt
+
+# --- Scene detection ---
+scenedetect==0.6.4
+
+# --- Progress bars ---
+tqdm==4.66.4
+
+# --- Face detection & blur ---
+mediapipe==0.10.14
+
+
+#-----------------------------
+moviepy==1.0.3
+opencv-python
+ultralytics 
+pyttsx3 
+pillow 
+numpy 
+requests
+
+# --- voice remove and separation
+demucs

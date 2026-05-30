@@ -1,0 +1,11 @@
+# Ignore everything by default
+*
+
+# Allow only source/text outputs requested
+!*.py
+!*.txt
+!*.md
+
+# Allow gitignore itself to be committed
+!.gitignore
+
