@@ -1,7 +1,7 @@
 import os
 from twitchAPI.twitch import Twitch
 import asyncio
-from twich_video_downloader import download_twitch_vod
+from twitch_video_downloader import download_twitch_vod
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 

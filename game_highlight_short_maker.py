@@ -1,10 +1,10 @@
-from twich_video_downloader import download_twitch_vod,get_next_processed_video_id,_download_single_video
-from gemini_text import generate_text
-from voice_remover import separate_vocals_with_demucs
+from twitch_video_downloader import download_twitch_vod, get_next_processed_video_id, _download_single_video
+from gemini_client import generate_text
+from vocal_separator import separate_vocals_with_demucs
 
 import ast    
 import textwrap    
-from tts_func import T_T_S    
+from text_to_speech import text_to_speech
 import os
 import random
 import cv2
@@ -38,7 +38,7 @@ OUTPUT_VIDEO = f"./{OUTPUT_DIR}/{GAME_NAME}-{VIDEO_ID}_processed.mp4"
 print(f"Processing video ID: {VIDEO_ID}, Title: {VIDEO_TITLE}")
 
 URL = 0 #"https://www.twitch.tv/rekellus/videos?filter=highlights&sort=time"  # Replace with your Twitch VOD URL
-# --- Download From twich
+# --- Download from Twitch.
 
 if URL:
     try:
@@ -190,8 +190,7 @@ class VideoProcessor:
         self.duration = self.get_video_duration(INPUT_VIDEO)
         voice_duration = int(self.duration)/3
         try:
-            # Import your Gemini-text module here
-            # import gemini_text
+            # Import your Gemini client module here.
             gemini_output_string = generate_text(f"""
                                     You are a skilled female gamer preparing to share a highlight from your gameplay with your audience.
                                     At the beginning of the video, deliver a short, engaging introduction—no longer than {voice_duration} seconds—that captures attention
@@ -260,7 +259,7 @@ class VideoProcessor:
     def text_to_speech(self, text, output_path):
         """Convert text to speech using female voice"""
         try:
-            tts = T_T_S(text=text, file_path=output_path)
+            tts = text_to_speech(text=text, file_path=output_path)
                         
             audio = AudioSegment.from_file(output_path)
             return audio.duration_seconds

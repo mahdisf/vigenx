@@ -1,11 +1,45 @@
-# Ignore everything by default
-*
+# Local environment and secrets
+.env
+.venv/
+venv/
+client_secrets.json
+token.json
 
-# Allow only source/text outputs requested
-!*.py
-!*.txt
-!*.md
+# Python caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
 
-# Allow gitignore itself to be committed
-!.gitignore
+# Generated media and local work folders
+archive/
+clips/
+downloads/
+kick_downloads/
+output/
+speaker-downloads/
+speaker-output/
+tmp/
 
+# Local assets and model caches kept outside git
+fonts/
+musics/
+Needs/
+TTS/
+voice_samples/
+yolov8n.pt
+
+# Large or redundant artifacts
+*.mp4
+*.mov
+*.mkv
+*.webm
+*.wav
+*.mp3
+*.srt
+*.rar
+*.zip
+*.pdf
+
+# Editor/workspace files
+.vscode/
+*.code-workspace

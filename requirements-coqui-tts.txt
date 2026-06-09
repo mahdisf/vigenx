@@ -1,0 +1,6 @@
+# Optional Coqui TTS dependencies.
+#
+# Do not install this into the main project environment with mediapipe.
+# Coqui TTS may pull trainer/protobuf versions that conflict with mediapipe.
+# Use a separate virtual environment if you specifically want Coqui voices.
+TTS

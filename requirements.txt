@@ -1,23 +1,30 @@
-opencv-python==4.10.0.84
+# Core video download/edit pipeline
 yt-dlp
+moviepy==1.0.3
+opencv-python==4.10.0.84
+numpy
+pillow
+pydub
+srt
+tqdm==4.66.4
+
+# AI transcription, audio analysis, and video analysis
 openai-whisper
 torch
 torchaudio
 torchvision
 librosa
-srt
 scenedetect==0.6.4
-tqdm==4.66.4
 mediapipe==0.10.14
-moviepy==1.0.3
 ultralytics
-pyttsx3
-pillow
-numpy
-requests
-demucs
-wand
-google-generativeai
-twitchAPI
-python-dotenv
 
+# AI text/commentary and configuration
+google-generativeai
+python-dotenv
+requests
+
+# Optional audio/text rendering helpers used by specific scripts
+demucs
+pyttsx3
+wand
+twitchAPI

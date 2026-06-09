@@ -205,7 +205,7 @@ class SpeechProcessor:
     
     def _analyze_with_llm(self, full_text: str, segments: List[SubtitleSegment]) -> List[KeyMoment]:
         """Placeholder for LLM integration - replace with your actual LLM"""
-        # This is where you'd call your LLM (like the gemini_text module)
+        # This is where you'd call your LLM (for example, gemini_client.generate_text).
         # For now, using a simple fallback
         return self._fallback_key_moment_detection(segments)
     
