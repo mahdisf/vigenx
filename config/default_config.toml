@@ -1,0 +1,73 @@
+# Content-Regenerator configuration
+# Override any AppConfig field here.
+# API keys are ALWAYS read from environment variables — never put secrets in this file.
+
+# --- Paths ---
+input_dir = "downloads"
+output_dir = "output"
+music_folder = "musics"
+fonts_dir = "fonts"
+speaker_input_dir = "speaker-downloads"
+speaker_output_dir = "speaker-output"
+clips_dir = "clips"
+jobs_dir = "jobs"
+
+# --- Video parameters ---
+max_duration = 59
+fade_duration = 0.5
+transition_duration = 0.3
+output_fps = 30
+crf = 18
+video_codec = "libx264"
+audio_codec = "aac"
+preset = "medium"
+
+# --- Game pipeline ---
+game_name = "Counter-Strike"
+yolo_model = "yolov8n.pt"
+use_gpu_encoder = false   # set true to use h264_nvenc (requires NVIDIA GPU + driver)
+
+# --- Speaker pipeline ---
+whisper_model = "small"
+music_volume = 0.15
+voice_volume = 0.8
+
+# --- AI models ---
+gemini_text_model = "gemini-2.5-flash"
+gemini_video_model = "gemini-2.5-flash"
+
+# --- TTS ---
+tts_engine = "pyttsx3"   # "pyttsx3" | "coqui"
+
+# --- ImageMagick (adjust if installed elsewhere) ---
+imagemagick_binary = 'C:\Program Files\ImageMagick-7.1.2-Q16-HDRI\magick.exe'
+
+# --- Text overlay styling ---
+text_color = "white"
+text_stroke_color = "#FD3C9D"
+text_shadow = true
+text_shadow_color = "#000000"
+text_shadow_offset = 4
+
+# --- Video color filters (1.0 = no change) ---
+brightness = 1.0
+contrast = 1.0
+saturation = 1.1       # slight pop
+
+# --- Branding ---
+logo_path = ""                 # e.g. "assets/logo.png"
+logo_position = "top-right"   # top-left | top-right | bottom-left | bottom-right
+logo_opacity = 0.85
+logo_scale = 0.10
+
+# --- Intro / outro clips ---
+intro_clip = ""    # e.g. "assets/intro.mp4"
+outro_clip = ""    # e.g. "assets/outro.mp4"
+
+# --- History spreadsheet ---
+history_csv = "output/history.csv"
+
+# --- Flask web UI ---
+flask_host = "127.0.0.1"
+flask_port = 5000
+flask_debug = false

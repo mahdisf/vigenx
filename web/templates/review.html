@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Review Queue — Content Regenerator{% endblock %}
+{% block content %}
+<h2 class="mb-4">Review Queue</h2>
+
+{% if not jobs %}
+  <div class="alert alert-info">No videos awaiting review.</div>
+{% else %}
+{% for job in jobs %}
+<div class="card mb-4">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span>Job <code>{{ job.id }}</code> — <strong>{{ job.pipeline_type }}</strong></span>
+    <small class="text-muted">{{ job.created_at[:19].replace('T',' ') }} UTC</small>
+  </div>
+  <div class="card-body">
+    <div class="row">
+      <div class="col-md-8">
+        <p><strong>Source:</strong> <span class="text-break">{{ job.source }}</span></p>
+        {% if job.output_path %}
+        <p><strong>Output:</strong> <code>{{ job.output_path }}</code></p>
+        {% endif %}
+        {% if job.manifest_path %}
+        <p><strong>Rights Manifest:</strong> <code>{{ job.manifest_path }}</code></p>
+        {% endif %}
+        {% if job.metadata_path %}
+        <p><strong>Metadata:</strong> <code>{{ job.metadata_path }}</code></p>
+        {% endif %}
+      </div>
+      <div class="col-md-4 d-flex align-items-center gap-2">
+        <form method="post" action="{{ url_for('review.approve', job_id=job.id) }}">
+          <button type="submit" class="btn btn-success">✅ Approve</button>
+        </form>
+        <form method="post" action="{{ url_for('review.reject', job_id=job.id) }}">
+          <button type="submit" class="btn btn-danger">❌ Reject</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+{% endif %}
+{% endblock %}

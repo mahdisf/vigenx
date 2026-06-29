@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Settings — Content Regenerator{% endblock %}
+{% block content %}
+<h2 class="mb-4">Settings</h2>
+
+<div class="alert alert-info">
+  API keys are read from environment variables and are never stored in the config file.
+</div>
+
+<div class="card mb-4">
+  <div class="card-header fw-bold">API Key Status</div>
+  <div class="card-body">
+    {% for key, is_set in env_keys.items() %}
+    <div class="d-flex align-items-center gap-2 mb-1">
+      <span class="badge bg-{{ 'success' if is_set else 'danger' }}">{{ 'Set' if is_set else 'Missing' }}</span>
+      <code>{{ key }}</code>
+    </div>
+    {% endfor %}
+    <small class="text-muted">Set these with <code>setx KEY "value"</code> in PowerShell, then restart the server.</small>
+  </div>
+</div>
+
+<form method="post" action="{{ url_for('settings.save') }}">
+  <div class="card mb-4">
+    <div class="card-header fw-bold">Pipeline Defaults</div>
+    <div class="card-body row g-3">
+      {% for key, val in fields.items() %}
+      <div class="col-md-4">
+        <label class="form-label" for="f_{{ key }}">{{ key }}</label>
+        {% if val is sameas true or val is sameas false %}
+          <select class="form-select" name="{{ key }}" id="f_{{ key }}">
+            <option value="true" {% if val %}selected{% endif %}>true</option>
+            <option value="false" {% if not val %}selected{% endif %}>false</option>
+          </select>
+        {% else %}
+          <input type="text" class="form-control" name="{{ key }}" id="f_{{ key }}" value="{{ val }}">
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  <button type="submit" class="btn btn-primary">Save Settings</button>
+</form>
+{% endblock %}

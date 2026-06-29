@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Content Regenerator{% endblock %}
+{% block content %}
+<h2 class="mb-4">Dashboard</h2>
+
+{% if not jobs %}
+  <div class="alert alert-info">No jobs yet. <a href="{{ url_for('jobs.new') }}">Create your first job →</a></div>
+{% else %}
+<div class="table-responsive">
+  <table class="table table-hover align-middle">
+    <thead class="table-dark">
+      <tr>
+        <th>ID</th><th>Pipeline</th><th>Source</th><th>Status</th><th>Progress</th><th>Created</th><th></th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for job in jobs %}
+    <tr>
+      <td><code>{{ job.id }}</code></td>
+      <td><span class="badge bg-secondary">{{ job.pipeline_type }}</span></td>
+      <td class="text-truncate" style="max-width:200px" title="{{ job.source }}">{{ job.source }}</td>
+      <td>
+        {% set badge = {'queued':'secondary','running':'primary','awaiting_review':'warning','approved':'success','rejected':'danger','done':'success','error':'danger'} %}
+        <span class="badge bg-{{ badge.get(job.status, 'secondary') }}">{{ job.status }}</span>
+      </td>
+      <td>
+        <div class="progress" style="height:8px;min-width:80px">
+          <div class="progress-bar" style="width:{{ job.progress_pct }}%"></div>
+        </div>
+        <small>{{ job.progress_pct }}%</small>
+      </td>
+      <td><small>{{ job.created_at[:19].replace('T',' ') }}</small></td>
+      <td><a class="btn btn-sm btn-outline-primary" href="{{ url_for('jobs.detail', job_id=job.id) }}">View</a></td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+{% endblock %}

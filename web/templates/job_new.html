@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}New Job — Content Regenerator{% endblock %}
+{% block content %}
+<h2 class="mb-4">New Job</h2>
+<form method="post" action="{{ url_for('jobs.create') }}" class="needs-validation" novalidate>
+  <div class="card mb-3">
+    <div class="card-header fw-bold">1. Source</div>
+    <div class="card-body">
+      <div class="mb-3">
+        <label class="form-label">Source Type</label>
+        <div>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="source_type" id="st_local" value="local" checked>
+            <label class="form-check-label" for="st_local">Local File</label>
+          </div>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="source_type" id="st_youtube" value="url">
+            <label class="form-check-label" for="st_youtube">YouTube / Twitch URL</label>
+          </div>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label" for="source">Source Path or URL</label>
+        <input type="text" class="form-control" id="source" name="source" required
+               placeholder="C:\path\to\video.mp4  or  https://youtu.be/...">
+        <div class="invalid-feedback">Please provide a source path or URL.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-header fw-bold">2. Pipeline</div>
+    <div class="card-body">
+      <div class="mb-3">
+        <label class="form-label">Pipeline Type</label>
+        <div>
+          {% for val, label in [('general','General Editor'),('speaker','Speaker Short'),('game','Game Highlight')] %}
+          <div class="form-check form-check-inline">
+            <input class="form-check-input pipeline-radio" type="radio" name="pipeline_type"
+                   id="pt_{{ val }}" value="{{ val }}" {% if val == 'general' %}checked{% endif %}>
+            <label class="form-check-label" for="pt_{{ val }}">{{ label }}</label>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- General options -->
+      <div id="opts_general" class="pipeline-opts">
+        <div class="form-check mb-1"><input class="form-check-input" type="checkbox" name="whisper" id="whisper"><label class="form-check-label" for="whisper">Whisper subtitles</label></div>
+        <div class="form-check mb-1"><input class="form-check-input" type="checkbox" name="trim_silence" id="trim_silence"><label class="form-check-label" for="trim_silence">Trim silence</label></div>
+        <div class="form-check mb-1"><input class="form-check-input" type="checkbox" name="blur_faces" id="blur_gen"><label class="form-check-label" for="blur_gen">Blur faces</label></div>
+      </div>
+
+      <!-- Speaker options -->
+      <div id="opts_speaker" class="pipeline-opts d-none">
+        <div class="mb-2">
+          <label class="form-label">Whisper model</label>
+          <select class="form-select form-select-sm" name="whisper_model" style="max-width:200px">
+            {% for m in ['tiny','base','small','medium','large'] %}<option value="{{ m }}" {% if m=='small' %}selected{% endif %}>{{ m }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="form-check mb-1"><input class="form-check-input" type="checkbox" name="blur_faces" id="blur_spk"><label class="form-check-label" for="blur_spk">Blur faces</label></div>
+        <div class="form-check mb-1"><input class="form-check-input" type="checkbox" name="no_music" id="no_music"><label class="form-check-label" for="no_music">No background music</label></div>
+      </div>
+
+      <!-- Game options -->
+      <div id="opts_game" class="pipeline-opts d-none">
+        <div class="mb-2">
+          <label class="form-label">Game name</label>
+          <input type="text" class="form-control form-control-sm" name="game_name" value="Counter-Strike" style="max-width:250px">
+        </div>
+        <div class="form-check mb-1">
+          <input class="form-check-input" type="checkbox" name="auto_mode" id="auto_mode" checked>
+          <label class="form-check-label" for="auto_mode">Auto-detect next unprocessed video ID</label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button type="submit" class="btn btn-primary px-4">🚀 Start Job</button>
+</form>
+{% endblock %}
+{% block scripts %}
+<script>
+document.querySelectorAll('.pipeline-radio').forEach(r => {
+  r.addEventListener('change', () => {
+    document.querySelectorAll('.pipeline-opts').forEach(d => d.classList.add('d-none'));
+    document.getElementById('opts_' + r.value)?.classList.remove('d-none');
+  });
+});
+(function(){
+  const f = document.querySelector('.needs-validation');
+  f.addEventListener('submit', e => { if (!f.checkValidity()) { e.preventDefault(); e.stopPropagation(); } f.classList.add('was-validated'); });
+})();
+</script>
+{% endblock %}

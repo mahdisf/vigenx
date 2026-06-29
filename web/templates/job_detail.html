@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Job {{ job.id }} — Content Regenerator{% endblock %}
+{% block content %}
+<div class="d-flex align-items-center gap-3 mb-4">
+  <h2 class="mb-0">Job <code>{{ job.id }}</code></h2>
+  {% set badge = {'queued':'secondary','running':'primary','awaiting_review':'warning','approved':'success','rejected':'danger','done':'success','error':'danger'} %}
+  <span class="badge bg-{{ badge.get(job.status,'secondary') }} fs-6">{{ job.status }}</span>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="card h-100">
+      <div class="card-body">
+        <h6 class="card-subtitle mb-2 text-muted">Pipeline</h6>
+        <p class="card-text fw-bold">{{ job.pipeline_type }}</p>
+        <h6 class="card-subtitle mb-2 text-muted">Source</h6>
+        <p class="card-text text-break">{{ job.source }}</p>
+        <h6 class="card-subtitle mb-2 text-muted">Created</h6>
+        <p class="card-text"><small>{{ job.created_at[:19].replace('T',' ') }} UTC</small></p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-8">
+    <div class="card h-100">
+      <div class="card-body">
+        <h6 class="card-subtitle mb-3 text-muted">Progress</h6>
+        <div class="progress mb-2" style="height:20px" id="progress-bar-wrapper">
+          <div class="progress-bar progress-bar-striped progress-bar-animated" id="progress-bar"
+               style="width:{{ job.progress_pct }}%" role="progressbar">{{ job.progress_pct }}%</div>
+        </div>
+        <pre id="log-box" class="bg-dark text-light p-3 rounded" style="max-height:250px;overflow-y:auto;font-size:12px">{% for line in job.log_lines %}{{ line }}
+{% endfor %}</pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if job.status == 'error' %}
+<div class="alert alert-danger"><strong>Error:</strong> {{ job.error_message }}</div>
+{% endif %}
+
+{% if job.status in ('awaiting_review','approved','rejected','done') %}
+<div class="alert alert-success">
+  Output: <code>{{ job.output_path }}</code>
+  <a class="btn btn-sm btn-warning ms-3" href="{{ url_for('review.index') }}">Go to Review Queue →</a>
+</div>
+{% endif %}
+{% endblock %}
+{% block scripts %}
+{% if job.status not in ('awaiting_review','approved','rejected','done','error') %}
+<script>
+const es = new EventSource("{{ url_for('jobs.stream', job_id=job.id) }}");
+const bar = document.getElementById('progress-bar');
+const logBox = document.getElementById('log-box');
+es.onmessage = e => {
+  const d = JSON.parse(e.data);
+  bar.style.width = d.progress_pct + '%';
+  bar.textContent = d.progress_pct + '%';
+  if (d.log_tail && d.log_tail.length) {
+    logBox.textContent = d.log_tail.join('\n');
+    logBox.scrollTop = logBox.scrollHeight;
+  }
+  if (['awaiting_review','approved','rejected','done','error'].includes(d.status)) {
+    es.close();
+    location.reload();
+  }
+};
+</script>
+{% endif %}
+{% endblock %}
