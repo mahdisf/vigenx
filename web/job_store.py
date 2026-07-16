@@ -22,6 +22,13 @@ class Job:
     source_type: str = "local"
     source: str = ""
     options: dict = field(default_factory=dict)
+    # --- graph engine (ViGenX) ---
+    graph: Optional[dict] = None              # serialized PipelineGraph, if a graph job
+    template_id: Optional[str] = None         # template to load when graph is omitted
+    source_refs: list = field(default_factory=list)  # MediaReference dicts for batch runs
+    node_status: dict = field(default_factory=dict)  # node_id -> {status, message, pct}
+    outputs: list = field(default_factory=list)       # produced output paths (batch)
+    # --- status ---
     status: str = "queued"
     progress_pct: float = 0.0
     log_lines: list[str] = field(default_factory=list)
@@ -30,6 +37,10 @@ class Job:
     metadata_path: Optional[str] = None
     thumbnail_path: Optional[str] = None
     error_message: Optional[str] = None
+
+    @property
+    def is_graph(self) -> bool:
+        return bool(self.graph or self.template_id)
 
 
 class JobStore:

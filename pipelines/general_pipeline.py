@@ -179,7 +179,7 @@ class GeneralPipeline(BasePipeline):
         manifest = build_default_manifest(
             output_video_path=out_path,
             source_url=source_url,
-            ai_tools_used=[f"Whisper {cfg.whisper_model}"] if whisper else [],
+            ai_tools=[f"Whisper {cfg.whisper_model}"] if whisper else [],
             transformation_notes="General editing: silence trim, face blur, subtitles",
         )
         manifest_path = save_manifest(manifest, cfg.output_dir)

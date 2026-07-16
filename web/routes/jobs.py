@@ -75,6 +75,7 @@ def stream(job_id: str):
                 "status": job.status,
                 "progress_pct": job.progress_pct,
                 "log_tail": job.log_lines[-10:] if job.log_lines else [],
+                "node_status": job.node_status,
                 "output_path": job.output_path,
                 "error_message": job.error_message,
             })

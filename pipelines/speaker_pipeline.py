@@ -231,7 +231,7 @@ class SpeakerPipeline(BasePipeline):
         manifest = build_default_manifest(
             output_video_path=out_path,
             source_url=source_url,
-            ai_tools_used=[f"Whisper {model_size}"],
+            ai_tools=[f"Whisper {model_size}"],
             transformation_notes="Speaker short: key-moment scoring, transitions, subtitles, background music",
         )
         manifest_path = save_manifest(manifest, out_dir)

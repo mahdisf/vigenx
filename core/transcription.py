@@ -22,21 +22,29 @@ def transcribe(
     model_size: str = "small",
     language: Optional[str] = None,
     word_timestamps: bool = False,
+    **whisper_opts,
 ) -> list[SubtitleSegment]:
     """
     Transcribe audio/video with Whisper and return segments.
     Loads the model fresh each call; callers that process many files should
     cache the model and call whisper.transcribe() directly.
+
+    Extra Whisper decoding options (``task``, ``temperature``, ``beam_size``,
+    ``best_of``, ``initial_prompt``, ``condition_on_previous_text``,
+    ``no_speech_threshold``, ...) may be passed via ``whisper_opts``; ``None``
+    values are dropped so Whisper's own defaults apply.
     """
     import whisper  # type: ignore[import]
 
     log.info("Loading Whisper model: %s", model_size)
     model = whisper.load_model(model_size)
     log.info("Transcribing: %s", audio_video_path)
+    opts = {k: v for k, v in whisper_opts.items() if v is not None and v != ""}
     result = model.transcribe(
         audio_video_path,
         language=language,
         word_timestamps=word_timestamps,
+        **opts,
     )
     segments = [
         SubtitleSegment(

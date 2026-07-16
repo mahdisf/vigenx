@@ -1,4 +1,10 @@
-from .settings import AppConfig, load_config
+from .settings import (
+    LLM_KEY_FIELDS,
+    AppConfig,
+    load_config,
+    load_llm_keys,
+    save_llm_keys,
+)
 
 _config: AppConfig | None = None
 
@@ -16,4 +22,12 @@ def reset_config() -> None:
     _config = None
 
 
-__all__ = ["AppConfig", "load_config", "get_config", "reset_config"]
+__all__ = [
+    "AppConfig",
+    "load_config",
+    "get_config",
+    "reset_config",
+    "LLM_KEY_FIELDS",
+    "load_llm_keys",
+    "save_llm_keys",
+]

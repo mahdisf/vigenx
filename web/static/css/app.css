@@ -9,6 +9,21 @@ body {
   overflow-y: auto;
 }
 
+/* Collapsible global navigation sidebar */
+.sidebar-toggle-float {
+  position: fixed;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 1040;
+  display: none;
+}
+#wrapper.sidebar-collapsed nav.sidebar {
+  display: none;
+}
+#wrapper.sidebar-collapsed .sidebar-toggle-float {
+  display: inline-block;
+}
+
 .sidebar .nav-link:hover {
   background: rgba(255, 255, 255, 0.1);
   border-radius: 4px;

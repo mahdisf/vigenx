@@ -1,0 +1,54 @@
+{
+  "id": "general",
+  "name": "General Editor",
+  "meta": {
+    "description": "Trim, remove silence, transcribe, burn subtitles, and export. Mirrors the legacy GeneralPipeline.",
+    "builtin": true
+  },
+  "nodes": [
+    {
+      "id": "src",
+      "type_id": "source",
+      "params": { "source": "", "source_type": "local" },
+      "position": { "x": 0, "y": 160 }
+    },
+    {
+      "id": "cut",
+      "type_id": "cut_trim",
+      "params": { "start": 0.0, "end": 0.0, "max_duration": 0 },
+      "position": { "x": 240, "y": 160 }
+    },
+    {
+      "id": "silence",
+      "type_id": "silence_trim",
+      "params": { "top_db": 28.0, "pad": 0.05 },
+      "position": { "x": 480, "y": 160 }
+    },
+    {
+      "id": "asr",
+      "type_id": "transcribe",
+      "params": { "model": "small", "language": "" },
+      "position": { "x": 720, "y": 40 }
+    },
+    {
+      "id": "subs",
+      "type_id": "subtitles",
+      "params": { "font_size": 42, "color": "white", "stroke_color": "black", "position": "bottom" },
+      "position": { "x": 960, "y": 160 }
+    },
+    {
+      "id": "out",
+      "type_id": "export",
+      "params": { "out_dir": "", "filename": "", "crf": 18, "preset": "medium" },
+      "position": { "x": 1200, "y": 160 }
+    }
+  ],
+  "edges": [
+    { "source": "src", "source_port": "media", "target": "cut", "target_port": "media" },
+    { "source": "cut", "source_port": "media", "target": "silence", "target_port": "media" },
+    { "source": "silence", "source_port": "media", "target": "asr", "target_port": "media" },
+    { "source": "silence", "source_port": "media", "target": "subs", "target_port": "media" },
+    { "source": "asr", "source_port": "subtitles", "target": "subs", "target_port": "subtitles" },
+    { "source": "subs", "source_port": "media", "target": "out", "target_port": "media" }
+  ]
+}

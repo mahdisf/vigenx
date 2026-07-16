@@ -1,0 +1,67 @@
+{
+  "id": "game",
+  "name": "Game Highlight",
+  "meta": {
+    "description": "Reframe gameplay to vertical 9:16, color-grade, brand with a logo, add music, export, and make a thumbnail. Inspired by the legacy GameHighlightPipeline.",
+    "builtin": true
+  },
+  "nodes": [
+    {
+      "id": "src",
+      "type_id": "source",
+      "params": { "source": "", "source_type": "local" },
+      "position": { "x": 0, "y": 160 }
+    },
+    {
+      "id": "cut",
+      "type_id": "cut_trim",
+      "params": { "start": 0.0, "end": 0.0, "max_duration": 59 },
+      "position": { "x": 220, "y": 160 }
+    },
+    {
+      "id": "vertical",
+      "type_id": "vertical_crop",
+      "params": { "mode": "crop", "width": 1080, "height": 1920 },
+      "position": { "x": 440, "y": 160 }
+    },
+    {
+      "id": "color",
+      "type_id": "color_filter",
+      "params": { "brightness": 1.0, "contrast": 1.05, "saturation": 1.15 },
+      "position": { "x": 660, "y": 160 }
+    },
+    {
+      "id": "logo",
+      "type_id": "logo",
+      "params": { "logo_path": "", "position": "top-right", "opacity": 0.85 },
+      "position": { "x": 880, "y": 160 }
+    },
+    {
+      "id": "music",
+      "type_id": "background_music",
+      "params": { "music_volume": 0.2 },
+      "position": { "x": 1100, "y": 160 }
+    },
+    {
+      "id": "out",
+      "type_id": "export",
+      "params": { "out_dir": "", "filename": "", "crf": 18, "preset": "medium" },
+      "position": { "x": 1320, "y": 160 }
+    },
+    {
+      "id": "thumb",
+      "type_id": "thumbnail",
+      "params": { "timestamp": 2.0, "title": "" },
+      "position": { "x": 1540, "y": 160 }
+    }
+  ],
+  "edges": [
+    { "source": "src", "source_port": "media", "target": "cut", "target_port": "media" },
+    { "source": "cut", "source_port": "media", "target": "vertical", "target_port": "media" },
+    { "source": "vertical", "source_port": "media", "target": "color", "target_port": "media" },
+    { "source": "color", "source_port": "media", "target": "logo", "target_port": "media" },
+    { "source": "logo", "source_port": "media", "target": "music", "target_port": "media" },
+    { "source": "music", "source_port": "media", "target": "out", "target_port": "media" },
+    { "source": "out", "source_port": "video", "target": "thumb", "target_port": "video" }
+  ]
+}

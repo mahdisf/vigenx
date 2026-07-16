@@ -15,4 +15,7 @@ app = create_app()
 
 if __name__ == "__main__":
     cfg = app.config["CR_CONFIG"]
+    # Start the background publish scheduler (skipped under the reloader's parent).
+    if not cfg.flask_debug or __import__("os").environ.get("WERKZEUG_RUN_MAIN") == "true":
+        app.config["CR_SCHEDULER"].start()
     app.run(host=cfg.flask_host, port=cfg.flask_port, debug=cfg.flask_debug)

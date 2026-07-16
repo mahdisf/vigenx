@@ -8,7 +8,36 @@
 </div>
 
 <div class="card mb-4">
-  <div class="card-header fw-bold">API Key Status</div>
+  <div class="card-header fw-bold">AI / LLM API Keys</div>
+  <div class="card-body">
+    <p class="text-muted small mb-3">
+      Keys are stored in the gitignored <code>credentials/</code> folder. The model is
+      chosen in each AI block. Environment variables, when set, override stored keys.
+    </p>
+    <form method="post" action="{{ url_for('settings.save_keys') }}">
+      <div class="row g-3">
+        {% for provider, info in llm_keys.items() %}
+        <div class="col-md-4">
+          <label class="form-label text-capitalize" for="key_{{ provider }}">
+            {{ provider }}
+            <span class="badge bg-{{ 'success' if info.set else 'secondary' }}">
+              {{ 'Configured' if info.set else 'Not set' }}</span>
+            {% if info.env_locked %}<span class="badge bg-info">env</span>{% endif %}
+          </label>
+          <input type="password" class="form-control" name="key_{{ provider }}"
+                 id="key_{{ provider }}" autocomplete="off"
+                 placeholder="{{ 'leave blank to keep' if info.set else 'paste API key' }}"
+                 {% if info.env_locked %}disabled title="Locked by environment variable"{% endif %}>
+        </div>
+        {% endfor %}
+      </div>
+      <button type="submit" class="btn btn-primary mt-3">Save API Keys</button>
+    </form>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-header fw-bold">Other API Key Status</div>
   <div class="card-body">
     {% for key, is_set in env_keys.items() %}
     <div class="d-flex align-items-center gap-2 mb-1">

@@ -16,9 +16,13 @@ clips/
 downloads/
 kick_downloads/
 output/
+renders/
 speaker-downloads/
 speaker-output/
 tmp/
+
+# Auto-publish credentials (OAuth tokens / cookies) — never commit
+credentials/
 
 # Local assets and model caches kept outside git
 fonts/
@@ -26,6 +30,7 @@ musics/
 Needs/
 TTS/
 voice_samples/
+jobs/
 yolov8n.pt
 
 # Large or redundant artifacts
@@ -39,6 +44,7 @@ yolov8n.pt
 *.rar
 *.zip
 *.pdf
+*.png
 
 # Editor/workspace files
 .vscode/
