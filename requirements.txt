@@ -3,11 +3,11 @@
 
 # Core video edit pipeline
 moviepy==1.0.3
-opencv-python==4.10.0.84
+opencv-python==4.14.0.94
 numpy
 pillow
 pydub
-tqdm==4.66.4
+tqdm==4.70.0
 
 # AI transcription, audio analysis, and video analysis
 openai-whisper
@@ -15,8 +15,8 @@ torch
 torchaudio
 torchvision
 librosa
-scenedetect==0.6.4
-mediapipe==0.10.14
+scenedetect==0.6.7.1
+mediapipe==0.10.35
 ultralytics
 
 # AI text/commentary providers
