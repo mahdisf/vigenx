@@ -1,0 +1,231 @@
+{
+  "graph": {
+    "id": "example-privacy-highlight",
+    "name": "Agent: make-one-privacy-safe-highlight-reel-under-45-se",
+    "meta": {
+      "agent_generated": true,
+      "brief": "Make one privacy-safe highlight reel under 45 seconds, blur faces, and add captions.",
+      "planner": "local",
+      "requires_approval": true
+    },
+    "nodes": [
+      {
+        "id": "source",
+        "type_id": "source",
+        "params": {
+          "source_type": "auto",
+          "source": "media/interview.mp4",
+          "max_height": "auto"
+        },
+        "position": {
+          "x": 0.0,
+          "y": 0.0
+        }
+      },
+      {
+        "id": "transcribe",
+        "type_id": "transcribe",
+        "params": {
+          "model": "small",
+          "language": "auto",
+          "task": "transcribe",
+          "word_timestamps": false,
+          "temperature": 0.0,
+          "beam_size": 0,
+          "best_of": 0,
+          "no_speech_threshold": 0.6,
+          "condition_on_previous_text": true,
+          "initial_prompt": ""
+        },
+        "position": {
+          "x": 260.0,
+          "y": 0.0
+        }
+      },
+      {
+        "id": "key_moments",
+        "type_id": "key_moments",
+        "params": {
+          "mode": "reel",
+          "max_duration": 45,
+          "count": 10,
+          "min_clip": 8.0,
+          "max_clip": 45.0,
+          "min_score": 1.0,
+          "headroom": 10.0
+        },
+        "position": {
+          "x": 520.0,
+          "y": 0.0
+        }
+      },
+      {
+        "id": "moments_cut",
+        "type_id": "moments_cut",
+        "params": {
+          "fade": 0.5,
+          "max_duration": 45
+        },
+        "position": {
+          "x": 780.0,
+          "y": 0.0
+        }
+      },
+      {
+        "id": "transcribe2",
+        "type_id": "transcribe",
+        "params": {
+          "model": "small",
+          "language": "auto",
+          "task": "transcribe",
+          "word_timestamps": false,
+          "temperature": 0.0,
+          "beam_size": 0,
+          "best_of": 0,
+          "no_speech_threshold": 0.6,
+          "condition_on_previous_text": true,
+          "initial_prompt": ""
+        },
+        "position": {
+          "x": 1040.0,
+          "y": 0.0
+        }
+      },
+      {
+        "id": "vertical_crop",
+        "type_id": "vertical_crop",
+        "params": {
+          "mode": "crop",
+          "width": 1080,
+          "height": 1920,
+          "blur_strength": 25
+        },
+        "position": {
+          "x": 1300.0,
+          "y": 0.0
+        }
+      },
+      {
+        "id": "face_blur",
+        "type_id": "face_blur",
+        "params": {
+          "ksize": 61,
+          "expand": 0.35,
+          "min_confidence": 0.5
+        },
+        "position": {
+          "x": 0.0,
+          "y": 180.0
+        }
+      },
+      {
+        "id": "subtitles",
+        "type_id": "subtitles",
+        "params": {
+          "font_size": 42,
+          "color": "white",
+          "stroke_color": "black",
+          "font": "",
+          "position": "bottom",
+          "align": "center",
+          "margin_v": 0.12,
+          "pos_x_frac": -1.0,
+          "pos_y_frac": -1.0,
+          "stroke_width": 2,
+          "width_frac": 0.9,
+          "sample_text": "Sample subtitle text"
+        },
+        "position": {
+          "x": 260.0,
+          "y": 180.0
+        }
+      },
+      {
+        "id": "export",
+        "type_id": "export",
+        "params": {
+          "out_dir": "",
+          "filename": "",
+          "quality": "High",
+          "fps": "source",
+          "codec": "libx264",
+          "audio_codec": "aac",
+          "audio_bitrate": "192k",
+          "preset": "medium",
+          "transformation_notes": "Edited with ViGenX pipeline"
+        },
+        "position": {
+          "x": 520.0,
+          "y": 180.0
+        }
+      }
+    ],
+    "edges": [
+      {
+        "source": "source",
+        "source_port": "media",
+        "target": "transcribe",
+        "target_port": "media"
+      },
+      {
+        "source": "transcribe",
+        "source_port": "subtitles",
+        "target": "key_moments",
+        "target_port": "subtitles"
+      },
+      {
+        "source": "source",
+        "source_port": "media",
+        "target": "moments_cut",
+        "target_port": "media"
+      },
+      {
+        "source": "key_moments",
+        "source_port": "moments",
+        "target": "moments_cut",
+        "target_port": "moments"
+      },
+      {
+        "source": "moments_cut",
+        "source_port": "media",
+        "target": "transcribe2",
+        "target_port": "media"
+      },
+      {
+        "source": "moments_cut",
+        "source_port": "media",
+        "target": "vertical_crop",
+        "target_port": "media"
+      },
+      {
+        "source": "vertical_crop",
+        "source_port": "media",
+        "target": "face_blur",
+        "target_port": "media"
+      },
+      {
+        "source": "face_blur",
+        "source_port": "media",
+        "target": "subtitles",
+        "target_port": "media"
+      },
+      {
+        "source": "transcribe2",
+        "source_port": "subtitles",
+        "target": "subtitles",
+        "target_port": "subtitles"
+      },
+      {
+        "source": "subtitles",
+        "source_port": "media",
+        "target": "export",
+        "target_port": "media"
+      }
+    ]
+  },
+  "summary": "Built a validated workflow: Source -> Transcribe (Whisper) -> Key Moments -> Assemble Moments -> Transcribe (Whisper) -> Vertical Format -> Face Blur -> Subtitles -> Export MP4.",
+  "planner": "local",
+  "warnings": [
+    "Cleared model-supplied path for source.source; choose it in the editor."
+  ]
+}

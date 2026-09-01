@@ -8,6 +8,8 @@ token.json
 # Python caches
 __pycache__/
 *.py[cod]
+build/
+*.egg-info/
 .pytest_cache/
 .coverage
 htmlcov/

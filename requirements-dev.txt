@@ -1,6 +1,4 @@
+-r requirements-core.txt
+
 pytest>=8.0
 pytest-mock
-pydantic>=2.0
-flask>=3.0
-srt
-yt-dlp

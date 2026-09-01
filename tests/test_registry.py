@@ -10,10 +10,14 @@ from engine.ports import MEDIA
 from engine.registry import (
     all_blocks,
     block_schemas,
+    clear_registry,
     get_block,
     load_builtin_blocks,
+    load_plugins,
+    plugin_errors,
     register_block,
 )
+import engine.registry as registry
 
 
 @register_block
@@ -83,3 +87,79 @@ def test_all_blocks_includes_registered():
     ids = {c.type_id for c in all_blocks()}
     assert "r_demo" in ids
     assert "source" in ids
+
+
+def test_clear_registry_allows_builtin_rediscovery():
+    load_builtin_blocks()
+
+    clear_registry()
+
+    try:
+        assert get_block("source").type_id == "source"
+    finally:
+        register_block(_RDemo)
+
+
+class _FakeDistribution:
+    name = "vigenx-example-plugin"
+    version = "1.2.3"
+
+
+class _FakeEntryPoint:
+    name = "example"
+    dist = _FakeDistribution()
+
+    def __init__(self, value):
+        self.value = value
+
+    def load(self):
+        return self.value
+
+
+class _FakeEntryPoints(list):
+    def select(self, **_kwargs):
+        return self
+
+
+def test_plugin_entry_point_is_loaded_with_origin(monkeypatch):
+    class _PluginBlock(PipelineBlock):
+        type_id = "test_plugin_block"
+        title = "Plugin Block"
+
+        def process(self, ctx, inputs):
+            return {}
+
+    monkeypatch.setattr(registry, "_PLUGINS_LOADED", False)
+    monkeypatch.setattr(registry, "_PLUGIN_ERRORS", [])
+    monkeypatch.setattr(
+        registry.metadata,
+        "entry_points",
+        lambda: _FakeEntryPoints([_FakeEntryPoint(_PluginBlock)]),
+    )
+
+    load_plugins()
+
+    assert get_block("test_plugin_block") is _PluginBlock
+    schema = next(item for item in block_schemas() if item["type_id"] == "test_plugin_block")
+    assert schema["origin"] == "vigenx-example-plugin@1.2.3:example"
+
+
+def test_plugin_cannot_replace_registered_block(monkeypatch):
+    class _Collision(PipelineBlock):
+        type_id = "r_demo"
+
+        def process(self, ctx, inputs):
+            return {}
+
+    monkeypatch.setattr(registry, "_PLUGINS_LOADED", False)
+    monkeypatch.setattr(registry, "_PLUGIN_ERRORS", [])
+    monkeypatch.setattr(
+        registry.metadata,
+        "entry_points",
+        lambda: _FakeEntryPoints([_FakeEntryPoint(_Collision)]),
+    )
+
+    load_plugins()
+
+    assert get_block("r_demo") is _RDemo
+    assert "already registered" in plugin_errors()[0]

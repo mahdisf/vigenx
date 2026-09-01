@@ -1,0 +1,160 @@
+{
+  "graph": {
+    "id": "example-podcast-shorts",
+    "name": "Agent: create-three-vertical-podcast-clips-under-45-sec",
+    "meta": {
+      "agent_generated": true,
+      "brief": "Create three vertical podcast clips under 45 seconds with yellow captions and background music.",
+      "planner": "local",
+      "requires_approval": true
+    },
+    "nodes": [
+      {
+        "id": "source",
+        "type_id": "source",
+        "params": {
+          "source_type": "auto",
+          "source": "media/podcast.mp4",
+          "max_height": "auto"
+        },
+        "position": {
+          "x": 0.0,
+          "y": 0.0
+        }
+      },
+      {
+        "id": "transcribe",
+        "type_id": "transcribe",
+        "params": {
+          "model": "small",
+          "language": "auto",
+          "task": "transcribe",
+          "word_timestamps": false,
+          "temperature": 0.0,
+          "beam_size": 0,
+          "best_of": 0,
+          "no_speech_threshold": 0.6,
+          "condition_on_previous_text": true,
+          "initial_prompt": ""
+        },
+        "position": {
+          "x": 260.0,
+          "y": 0.0
+        }
+      },
+      {
+        "id": "vertical_crop",
+        "type_id": "vertical_crop",
+        "params": {
+          "mode": "crop",
+          "width": 1080,
+          "height": 1920,
+          "blur_strength": 25
+        },
+        "position": {
+          "x": 520.0,
+          "y": 0.0
+        }
+      },
+      {
+        "id": "subtitles",
+        "type_id": "subtitles",
+        "params": {
+          "font_size": 42,
+          "color": "yellow",
+          "stroke_color": "black",
+          "font": "",
+          "position": "bottom",
+          "align": "center",
+          "margin_v": 0.12,
+          "pos_x_frac": -1.0,
+          "pos_y_frac": -1.0,
+          "stroke_width": 2,
+          "width_frac": 0.9,
+          "sample_text": "Sample subtitle text"
+        },
+        "position": {
+          "x": 780.0,
+          "y": 0.0
+        }
+      },
+      {
+        "id": "background_music",
+        "type_id": "background_music",
+        "params": {
+          "music_folder": "",
+          "track": "",
+          "music_volume": 0.15,
+          "voice_volume": 0.8
+        },
+        "position": {
+          "x": 1040.0,
+          "y": 0.0
+        }
+      },
+      {
+        "id": "export",
+        "type_id": "export",
+        "params": {
+          "out_dir": "",
+          "filename": "",
+          "quality": "High",
+          "fps": "source",
+          "codec": "libx264",
+          "audio_codec": "aac",
+          "audio_bitrate": "192k",
+          "preset": "medium",
+          "transformation_notes": "Edited with ViGenX pipeline"
+        },
+        "position": {
+          "x": 1300.0,
+          "y": 0.0
+        }
+      }
+    ],
+    "edges": [
+      {
+        "source": "source",
+        "source_port": "media",
+        "target": "transcribe",
+        "target_port": "media"
+      },
+      {
+        "source": "source",
+        "source_port": "media",
+        "target": "vertical_crop",
+        "target_port": "media"
+      },
+      {
+        "source": "vertical_crop",
+        "source_port": "media",
+        "target": "subtitles",
+        "target_port": "media"
+      },
+      {
+        "source": "transcribe",
+        "source_port": "subtitles",
+        "target": "subtitles",
+        "target_port": "subtitles"
+      },
+      {
+        "source": "subtitles",
+        "source_port": "media",
+        "target": "background_music",
+        "target_port": "media"
+      },
+      {
+        "source": "background_music",
+        "source_port": "media",
+        "target": "export",
+        "target_port": "media"
+      }
+    ]
+  },
+  "summary": "Built a validated workflow: Source -> Transcribe (Whisper) -> Vertical Format -> Subtitles -> Background Music -> Export MP4.",
+  "planner": "local",
+  "warnings": [
+    "Choose a licensed music track or folder before running.",
+    "Cleared model-supplied path for source.source; choose it in the editor."
+  ]
+}

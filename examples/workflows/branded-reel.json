@@ -1,0 +1,180 @@
+{
+  "graph": {
+    "id": "example-branded-reel",
+    "name": "Agent: make-a-cinematic-vertical-branded-reel-with-a-lo",
+    "meta": {
+      "agent_generated": true,
+      "brief": "Make a cinematic vertical branded reel with a logo, intro, outro, background music, and a thumbnail.",
+      "planner": "local",
+      "requires_approval": true
+    },
+    "nodes": [
+      {
+        "id": "source",
+        "type_id": "source",
+        "params": {
+          "source_type": "auto",
+          "source": "media/product-demo.mp4",
+          "max_height": "auto"
+        },
+        "position": {
+          "x": 0.0,
+          "y": 0.0
+        }
+      },
+      {
+        "id": "vertical_crop",
+        "type_id": "vertical_crop",
+        "params": {
+          "mode": "crop",
+          "width": 1080,
+          "height": 1920,
+          "blur_strength": 25
+        },
+        "position": {
+          "x": 260.0,
+          "y": 0.0
+        }
+      },
+      {
+        "id": "color_filter",
+        "type_id": "color_filter",
+        "params": {
+          "brightness": 1.0,
+          "contrast": 1.05,
+          "saturation": 1.15
+        },
+        "position": {
+          "x": 520.0,
+          "y": 0.0
+        }
+      },
+      {
+        "id": "logo",
+        "type_id": "logo",
+        "params": {
+          "logo_path": "",
+          "position": "top-right",
+          "opacity": 0.85,
+          "scale": 0.1
+        },
+        "position": {
+          "x": 780.0,
+          "y": 0.0
+        }
+      },
+      {
+        "id": "intro_outro",
+        "type_id": "intro_outro",
+        "params": {
+          "intro_clip": "",
+          "outro_clip": ""
+        },
+        "position": {
+          "x": 1040.0,
+          "y": 0.0
+        }
+      },
+      {
+        "id": "background_music",
+        "type_id": "background_music",
+        "params": {
+          "music_folder": "",
+          "track": "",
+          "music_volume": 0.15,
+          "voice_volume": 0.8
+        },
+        "position": {
+          "x": 1300.0,
+          "y": 0.0
+        }
+      },
+      {
+        "id": "export",
+        "type_id": "export",
+        "params": {
+          "out_dir": "",
+          "filename": "",
+          "quality": "High",
+          "fps": "source",
+          "codec": "libx264",
+          "audio_codec": "aac",
+          "audio_bitrate": "192k",
+          "preset": "medium",
+          "transformation_notes": "Edited with ViGenX pipeline"
+        },
+        "position": {
+          "x": 0.0,
+          "y": 180.0
+        }
+      },
+      {
+        "id": "thumbnail",
+        "type_id": "thumbnail",
+        "params": {
+          "timestamp": 5.0,
+          "title": "",
+          "text_color": "white",
+          "stroke_color": "#FD3C9D",
+          "font_path": ""
+        },
+        "position": {
+          "x": 260.0,
+          "y": 180.0
+        }
+      }
+    ],
+    "edges": [
+      {
+        "source": "source",
+        "source_port": "media",
+        "target": "vertical_crop",
+        "target_port": "media"
+      },
+      {
+        "source": "vertical_crop",
+        "source_port": "media",
+        "target": "color_filter",
+        "target_port": "media"
+      },
+      {
+        "source": "color_filter",
+        "source_port": "media",
+        "target": "logo",
+        "target_port": "media"
+      },
+      {
+        "source": "logo",
+        "source_port": "media",
+        "target": "intro_outro",
+        "target_port": "media"
+      },
+      {
+        "source": "intro_outro",
+        "source_port": "media",
+        "target": "background_music",
+        "target_port": "media"
+      },
+      {
+        "source": "background_music",
+        "source_port": "media",
+        "target": "export",
+        "target_port": "media"
+      },
+      {
+        "source": "export",
+        "source_port": "video",
+        "target": "thumbnail",
+        "target_port": "video"
+      }
+    ]
+  },
+  "summary": "Built a validated workflow: Source -> Vertical Format -> Color Filter -> Logo Overlay -> Intro / Outro -> Background Music -> Export MP4 -> Thumbnail.",
+  "planner": "local",
+  "warnings": [
+    "Choose the logo file in the Logo block before running.",
+    "Choose the intro/outro files in the block before running.",
+    "Choose a licensed music track or folder before running.",
+    "Cleared model-supplied path for source.source; choose it in the editor."
+  ]
+}

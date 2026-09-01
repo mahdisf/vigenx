@@ -1,0 +1,41 @@
+name: Documentation report
+description: Report incorrect, missing, or unusable ViGenX documentation
+title: "[Docs]: "
+labels: [documentation]
+body:
+  - type: input
+    id: location
+    attributes:
+      label: Documentation location
+      description: Link the page or name the file and section.
+      placeholder: README.md, Quick start
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: State what is wrong, missing, or impossible to follow.
+    validations:
+      required: true
+  - type: textarea
+    id: attempted
+    attributes:
+      label: What you attempted
+      description: Include exact commands and the relevant output from python -m vigenx doctor.
+    validations:
+      required: false
+  - type: textarea
+    id: correction
+    attributes:
+      label: Suggested correction
+      description: Provide corrected wording, behavior, or a source when available.
+    validations:
+      required: false
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Data check
+      options:
+        - label: I removed credentials, private paths, personal media, and unredacted metadata.
+          required: true

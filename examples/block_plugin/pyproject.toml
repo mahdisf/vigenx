@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=70"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vigenx-example-block"
+version = "0.1.0"
+description = "Minimal external block example for a ViGenX source checkout"
+requires-python = ">=3.10"
+license = { text = "Apache-2.0" }
+
+[project.entry-points."vigenx.blocks"]
+prefix_text = "vigenx_example_block:PrefixTextBlock"
+
+[tool.setuptools.packages.find]
+where = ["src"]

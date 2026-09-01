@@ -10,9 +10,11 @@ permissions:
 
 jobs:
   python:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
+        os: [ubuntu-latest, windows-latest]
         python-version: ["3.10", "3.12"]
     steps:
       - uses: actions/checkout@v4
@@ -22,7 +24,9 @@ jobs:
           cache: pip
       - run: python -m pip install --upgrade pip
       - run: python -m pip install -r requirements-dev.txt
-      - run: python -m compileall -q config core engine pipelines publishing sources web tests
+      - run: python -m compileall -q config core engine examples pipelines publishing scripts sources tests vigenx web
+      - run: python -m vigenx doctor
+      - run: python -m vigenx plan "Create three vertical clips with captions" --mode local --output tmp-ci-workflow.json
       - run: python -m pytest
 
   website:

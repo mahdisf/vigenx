@@ -1,11 +1,12 @@
-# Core video download/edit pipeline
-yt-dlp
+# Prompt-to-graph planning and local editor.
+-r requirements-core.txt
+
+# Core video edit pipeline
 moviepy==1.0.3
 opencv-python==4.10.0.84
 numpy
 pillow
 pydub
-srt
 tqdm==4.66.4
 
 # AI transcription, audio analysis, and video analysis
@@ -18,12 +19,9 @@ scenedetect==0.6.4
 mediapipe==0.10.14
 ultralytics
 
-# AI text/commentary, configuration, and web UI
+# AI text/commentary providers
 google-generativeai
-python-dotenv
-requests
-pydantic>=2.0
-flask>=3.0
+openai
 
 # Optional audio/text rendering helpers used by specific scripts
 demucs

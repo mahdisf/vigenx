@@ -3,12 +3,13 @@
 **Describe an edit. Get an inspectable, editable, reproducible video workflow.**
 
 [![CI](https://github.com/mahdisf/vigenx/actions/workflows/ci.yml/badge.svg)](https://github.com/mahdisf/vigenx/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/mahdisf/vigenx?include_prereleases&label=release)](https://github.com/mahdisf/vigenx/releases)
 [![Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-3776AB.svg)](https://www.python.org/)
 
 [Live site](https://mahdisf.github.io/vigenx/) | [Issues](https://github.com/mahdisf/vigenx/issues) | [Discussions](https://github.com/mahdisf/vigenx/discussions) | [Contributing](CONTRIBUTING.md)
 
-ViGenX is a local-first, agent-assisted video workflow editor. Write a brief such
+ViGenX is a locally run, agent-assisted video workflow editor. Write a brief such
 as:
 
 > Turn this podcast into three vertical clips under 45 seconds with yellow
@@ -65,38 +66,55 @@ never executed by the planning endpoint.
 | Publishing boundary | Folder/YouTube/Instagram adapters, atomic scheduler claims, approved-job gate, and private visibility defaults where supported |
 | Legacy paths | General, speaker, and game Python pipelines remain available while graph parity is completed |
 
-## Quick start
+## Quick start: prove planning first
 
 Requirements:
 
 - Python 3.10 or newer
-- FFmpeg and `ffprobe` on `PATH`
-- Enough local disk for source files, temporary renders, and model caches
+- Git
+- Internet access for the initial dependency install and the current editor UI
 
-Using Conda:
+This core path does not download AI models, require an API key, or render media:
 
 ```powershell
 git clone https://github.com/mahdisf/vigenx.git
 cd vigenx
-conda create -n vigenx python=3.10 -y
-conda activate vigenx
-python -m pip install -r requirements.txt
-python run_web.py
+python scripts/bootstrap.py --profile core
+.\.venv\Scripts\Activate.ps1
+python -m vigenx doctor
+python -m vigenx plan "Create three vertical clips with captions" --mode local --output first-workflow.json
+python -m vigenx web
 ```
 
 Open [http://127.0.0.1:5000/editor](http://127.0.0.1:5000/editor). Enter a brief
-in **Describe your edit**, choose **Auto**, and select **Create workflow**.
+in **Describe your edit**, choose **Local**, and select **Create workflow**.
+
+On macOS or Linux, activate the environment with `source .venv/bin/activate`.
+For Conda, activate the environment and install `requirements-core.txt` directly
+instead of creating `.venv`. Pass `--venv` to the bootstrap script when you want
+a different virtual-environment path. See the complete
+[getting-started guide](docs/GETTING_STARTED.md).
+
+```powershell
+conda activate vigenx
+python -m pip install -r requirements-core.txt
+```
 
 `Auto` uses a configured model provider when a key is available and falls back to
 the local planner if it is not. `Local` never calls a model. `AI` requires a
 configured provider and fails explicitly rather than silently changing modes.
+
+Rendering is a separate, larger setup. Install FFmpeg and `ffprobe`, then run
+`python scripts/bootstrap.py --profile full` and
+`python -m vigenx doctor --strict`. The strict check fails until the complete
+render toolchain is available.
 
 ## Headless planning
 
 Generate workflow JSON without opening the web app:
 
 ```powershell
-python -m engine.plan_cli `
+python -m vigenx plan `
   "Create three vertical clips with captions and music" `
   --source ".\episode.mp4" `
   --mode local `
@@ -176,17 +194,45 @@ Backend block declarations are the source of truth for the palette, inspector,
 planner allow-list, and graph validation. See [`engine/block.py`](engine/block.py),
 [`engine/registry.py`](engine/registry.py), and [`engine/planner.py`](engine/planner.py).
 
+## Extend ViGenX with blocks
+
+Blocks are the public extension unit. An external Python package can register a
+typed `PipelineBlock` through the `vigenx.blocks` entry-point group. Installed
+blocks join the same validated catalog used by the planner, editor, and executor;
+plugin import failures are isolated and reported by `python -m vigenx doctor`.
+
+Start with the runnable [example plugin](examples/block_plugin/README.md), then
+read the [block authoring contract](docs/BLOCK_AUTHORING.md). The plugin API is
+experimental before 1.0, so plugin projects must pin and report the ViGenX commit
+or release they test against.
+
+## Documentation
+
+| Goal | Read |
+|---|---|
+| Prove planning and open the editor | [Getting started](docs/GETTING_STARTED.md) |
+| Understand trust and side-effect boundaries | [Architecture](docs/ARCHITECTURE.md) |
+| Build an external editing block | [Block authoring](docs/BLOCK_AUTHORING.md) |
+| Diagnose installation and runtime failures | [Troubleshooting](docs/TROUBLESHOOTING.md) |
+| Submit a reproducible project example | [Showcase](docs/SHOWCASE.md) |
+| Review the repository benchmark | [Editor benchmark](docs/EDITOR_BENCHMARK.md) |
+| Follow released changes | [Changelog](CHANGELOG.md) |
+| Report a vulnerability | [Security policy](SECURITY.md) |
+
 ## Project layout
 
 ```text
 config/       application configuration and local key-store integration
 core/         transcription, media, AI, metadata, and rights utilities
 engine/       typed graph, constrained planner, executor, registry, and blocks
+examples/     runnable prompts, workflows, and external block package
 pipelines/    legacy general/speaker/game pipelines
 publishing/   tracked publisher adapters and atomic scheduler
+scripts/      environment bootstrap and project utilities
 sources/      local/URL/social source resolution
 templates/    built-in graph templates
 tests/        unit, API, planner, concurrency, and persistence coverage
+vigenx/       source-checkout CLI and diagnostics
 web/          Flask app and no-build React Flow editor
 website/      Vite landing page deployed with GitHub Pages
 ```
@@ -200,7 +246,7 @@ under `publishing/`; generated videos remain under `output/`.
 ```powershell
 conda activate vigenx
 python -m pytest
-python -m compileall -q config core engine pipelines publishing sources web tests
+python -m compileall -q config core engine examples pipelines publishing scripts sources vigenx web tests
 ```
 
 The unit suite does not prove codec compatibility, model quality, or render
@@ -232,23 +278,28 @@ MoviePy, auto-editor, OpenTimelineIO, Agentic Video Editor, and Velorn. The full
 dated analysis and license cautions are in
 [`docs/EDITOR_BENCHMARK.md`](docs/EDITOR_BENCHMARK.md).
 
-Highest-priority gaps:
+## Current contribution priorities
 
 1. Licensed tiny-video fixtures and prompt-to-graph structural evals
 2. Bounded render verification and revision with explicit approval
 3. Persistent content-addressed node caching
 4. Workflow diff, dry-run resource estimates, and full run-from-node
 5. OpenTimelineIO export and a timeline model distinct from the processing DAG
-6. Subgraphs and third-party block discovery
+6. Subgraphs, plugin compatibility versioning, and block scaffolding
 
-One million stars is not an engineering acceptance criterion and cannot be
-guaranteed. The project should earn adoption through successful first workflows,
-fast previews, reproducible output, crash-free jobs, and useful contributor APIs.
+The current editor loads React, React Flow, and other UI libraries from public
+CDNs. Planning and media processing run locally, but the editor is not yet fully
+offline. The full render stack also lacks a licensed cross-platform smoke fixture.
+These are active contribution targets, not completed capabilities.
 
 ## Contributing
 
 Contributions are requested, especially in the roadmap areas above. Read
 [`CONTRIBUTING.md`](CONTRIBUTING.md), use the issue templates, and open a design
 discussion before a large architecture change.
+
+Merged contributors are credited in release notes. Reproducible community
+workflows and outputs can be submitted to the [showcase](docs/SHOWCASE.md) with
+their author and source license recorded.
 
 Apache-2.0 licensed. See [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE).
