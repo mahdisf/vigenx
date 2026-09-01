@@ -1,4 +1,4 @@
 -r requirements-core.txt
 
-pytest>=8.0
+pytest>=9.1.1
 pytest-mock
