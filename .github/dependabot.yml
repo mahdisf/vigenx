@@ -4,6 +4,9 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    # Routine full-stack upgrades need the render smoke coverage tracked in #5.
+    # A zero limit disables version PRs, not Dependabot security updates.
+    open-pull-requests-limit: 0
     groups:
       python-runtime:
         patterns:
@@ -24,6 +27,7 @@ updates:
     directory: /website
     schedule:
       interval: weekly
+    open-pull-requests-limit: 2
     groups:
       website:
         patterns:
@@ -40,6 +44,7 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    open-pull-requests-limit: 1
     groups:
       actions:
         patterns:
