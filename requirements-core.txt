@@ -1,7 +1,7 @@
 # Prompt-to-graph planning and the trusted local web editor.
 # Rendering and model stacks live in requirements.txt.
 flask>=3.0
-pydantic>=2.0
+pydantic>=2.13.5
 python-dotenv>=1.0
 requests>=2.31
 srt>=3.5
