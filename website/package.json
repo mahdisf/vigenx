@@ -10,18 +10,18 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "lucide-react": "0.487.0",
-    "motion": "12.23.24",
-    "react": "18.3.1",
-    "react-dom": "18.3.1"
+    "lucide-react": "1.37.0",
+    "motion": "13.1.1",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",
-    "@types/react": "18.3.20",
-    "@types/react-dom": "18.3.6",
-    "@vitejs/plugin-react": "^6.1.0",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.5",
+    "@vitejs/plugin-react": "^6.1.1",
     "tailwindcss": "^4.3.3",
-    "typescript": "5.7.3",
+    "typescript": "7.0.2",
     "vite": "^8.2.2"
   }
 }
