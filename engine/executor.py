@@ -59,6 +59,23 @@ class RunResult:
                     paths.append(payload.path)
         return paths
 
+    def artifact_paths(self, key: str) -> List[str]:
+        """Collect sidecar paths stored on terminal media payloads."""
+        paths: List[str] = []
+        singular = key[:-1] if key.endswith("s") else key
+        for outputs in self.terminal_outputs.values():
+            for payload in outputs.values():
+                if not isinstance(payload, MediaRef):
+                    continue
+                value = (payload.meta or {}).get(key)
+                if value is None:
+                    value = (payload.meta or {}).get(singular)
+                if isinstance(value, str) and value:
+                    paths.append(value)
+                elif isinstance(value, list):
+                    paths.extend(str(path) for path in value if path)
+        return paths
+
 
 class GraphExecutor:
     def __init__(

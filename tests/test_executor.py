@@ -10,9 +10,9 @@ from engine.block import (
     PipelineBlock,
     PortSpec,
 )
-from engine.executor import GraphExecutor
+from engine.executor import GraphExecutor, RunResult
 from engine.graph import GraphEdge, GraphNode, PipelineGraph
-from engine.ports import ANY, Text
+from engine.ports import ANY, MediaRef, Text
 from engine.registry import register_block
 
 # Track how many times each block's process() runs, to prove memoization.
@@ -130,3 +130,17 @@ def test_preview_missing_required_input_gives_friendly_error():
     with pytest.raises(ValueError) as exc:
         ex.preview_at("st", t=1.0)
     assert "not connected" in str(exc.value)
+
+
+def test_run_result_collects_sidecar_artifacts():
+    result = RunResult(terminal_outputs={
+        "out": {"video": MediaRef(
+            "a.mp4",
+            meta={
+                "manifest_paths": ["a_rights.json", "b_rights.json"],
+                "metadata_paths": ["a_metadata.json", "b_metadata.json"],
+            },
+        )}
+    })
+    assert result.artifact_paths("manifest_paths") == ["a_rights.json", "b_rights.json"]
+    assert result.artifact_paths("metadata_paths") == ["a_metadata.json", "b_metadata.json"]

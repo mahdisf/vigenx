@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import secrets
 
 from flask import Flask
 
@@ -13,10 +14,10 @@ def create_app(config_path: str = "config/default_config.toml") -> Flask:
     cfg = load_config(config_path)
     app.config["CR_CONFIG"] = cfg
     app.config["CR_STORE"] = JobStore(cfg.jobs_dir)
-    app.config["SECRET_KEY"] = "change-me-in-production"
+    app.config["SECRET_KEY"] = os.environ.get("VIGENX_SECRET_KEY") or secrets.token_hex(32)
 
     # Publish scheduler (created here, started by run_web.py — not in tests).
-    from output.scheduler import PublishScheduler
+    from publishing.scheduler import PublishScheduler
     app.config["CR_SCHEDULER"] = PublishScheduler(
         store_path=os.path.join(cfg.jobs_dir, "schedule.json"), config=cfg)
 

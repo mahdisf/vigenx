@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://mahdisf.github.io/vigenx/sitemap.xml

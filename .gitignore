@@ -9,6 +9,8 @@ token.json
 __pycache__/
 *.py[cod]
 .pytest_cache/
+.coverage
+htmlcov/
 
 # Generated media and local work folders
 archive/
@@ -45,7 +47,13 @@ yolov8n.pt
 *.zip
 *.pdf
 *.png
+!website/public/*.png
 
 # Editor/workspace files
 .vscode/
+.playwright-cli/
 *.code-workspace
+
+# Landing-page build output and dependencies
+node_modules/
+website/dist/

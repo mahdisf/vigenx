@@ -25,6 +25,10 @@
         {% if job.metadata_path %}
         <p><strong>Metadata:</strong> <code>{{ job.metadata_path }}</code></p>
         {% endif %}
+        {% if job.outputs|length > 1 %}
+        <p><strong>Batch:</strong> {{ job.outputs|length }} videos, {{ job.manifests|length }} rights manifests,
+          {{ job.metadata_files|length }} metadata files</p>
+        {% endif %}
       </div>
       <div class="col-md-4 d-flex align-items-center gap-2">
         <form method="post" action="{{ url_for('review.approve', job_id=job.id) }}">

@@ -25,6 +25,7 @@ from engine.registry import (
     load_builtin_blocks,
     register_block,
 )
+from engine.planner import WorkflowPlan, WorkflowPlanner, WorkflowPlanningError
 
 __all__ = [
     "ParamSpec",
@@ -42,4 +43,7 @@ __all__ = [
     "get_block",
     "load_builtin_blocks",
     "register_block",
+    "WorkflowPlan",
+    "WorkflowPlanner",
+    "WorkflowPlanningError",
 ]

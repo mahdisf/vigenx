@@ -13,18 +13,22 @@ def index():
 @bp.post("/<job_id>/approve")
 def approve(job_id: str):
     store = current_app.config["CR_STORE"]
+    def mark(job):
+        if job.status == "awaiting_review":
+            job.status = "approved"
+
     if store.exists(job_id):
-        job = store.load(job_id)
-        job.status = "approved"
-        store.save(job)
+        store.mutate(job_id, mark)
     return redirect(url_for("review.index"))
 
 
 @bp.post("/<job_id>/reject")
 def reject(job_id: str):
     store = current_app.config["CR_STORE"]
+    def mark(job):
+        if job.status == "awaiting_review":
+            job.status = "rejected"
+
     if store.exists(job_id):
-        job = store.load(job_id)
-        job.status = "rejected"
-        store.save(job)
+        store.mutate(job_id, mark)
     return redirect(url_for("review.index"))

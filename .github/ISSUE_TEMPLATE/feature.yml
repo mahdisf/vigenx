@@ -1,0 +1,26 @@
+name: Feature proposal
+description: Propose a scoped workflow, block, or engine improvement
+title: "[Proposal]: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: Describe the editing task that cannot be completed reliably today.
+    validations:
+      required: true
+  - type: textarea
+    id: design
+    attributes:
+      label: Proposed behavior
+      description: Include graph/block contracts, approval points, and failure handling.
+    validations:
+      required: true
+  - type: textarea
+    id: verification
+    attributes:
+      label: Verification plan
+      description: Define fixtures and measurable acceptance criteria.
+    validations:
+      required: true

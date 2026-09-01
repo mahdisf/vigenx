@@ -68,6 +68,17 @@ def test_enum_param_requires_choices():
         ParamSpec("bad", "enum", "x")
 
 
+def test_param_coercion_enforces_choices_and_ranges():
+    mode = ParamSpec("mode", "enum", "a", choices=["a", "b"])
+    level = ParamSpec("level", "int", 3, min=0, max=10)
+    ratio = ParamSpec("ratio", "float", 0.5, min=0.0, max=1.0)
+
+    assert mode.coerce("not-a-choice") == "a"
+    assert level.coerce(99) == 10
+    assert level.coerce(-2) == 0
+    assert ratio.coerce("1.7") == 1.0
+
+
 def test_all_blocks_includes_registered():
     ids = {c.type_id for c in all_blocks()}
     assert "r_demo" in ids

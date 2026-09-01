@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
 from typing import Any, Dict, List, Optional
 
 from engine.graph import PipelineGraph
@@ -16,6 +17,7 @@ from engine.graph import PipelineGraph
 log = logging.getLogger(__name__)
 
 DEFAULT_TEMPLATES_DIR = "templates"
+TEMPLATE_ID_PATTERN = re.compile(r"^[A-Za-z0-9_-]+$")
 
 
 def _templates_dir(templates_dir: Optional[str]) -> str:
@@ -25,6 +27,8 @@ def _templates_dir(templates_dir: Optional[str]) -> str:
 
 
 def template_path(template_id: str, templates_dir: Optional[str] = None) -> str:
+    if not isinstance(template_id, str) or not TEMPLATE_ID_PATTERN.fullmatch(template_id):
+        raise ValueError("Template id may contain only letters, numbers, hyphens, and underscores")
     return os.path.join(_templates_dir(templates_dir), f"{template_id}.json")
 
 
@@ -43,8 +47,9 @@ def load_template(
     id_or_path: str, templates_dir: Optional[str] = None
 ) -> PipelineGraph:
     """Load a template by id (within ``templates_dir``) or by direct file path."""
-    path = id_or_path
-    if not os.path.isfile(path):
+    if templates_dir is None and os.path.isfile(id_or_path):
+        path = id_or_path
+    else:
         path = template_path(id_or_path, templates_dir)
     with open(path, encoding="utf-8") as f:
         data = json.load(f)
@@ -90,4 +95,5 @@ __all__ = [
     "delete_template",
     "template_path",
     "DEFAULT_TEMPLATES_DIR",
+    "TEMPLATE_ID_PATTERN",
 ]

@@ -1,6 +1,8 @@
 import os
 import sys
 
+import pytest
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from engine.graph import GraphEdge, GraphNode, PipelineGraph
@@ -9,6 +11,7 @@ from engine.templates import (
     list_templates,
     load_template,
     save_template,
+    template_path,
 )
 
 
@@ -54,3 +57,9 @@ def test_delete_template(tmp_path):
     assert delete_template("tmpl1", str(tmp_path)) is True
     assert delete_template("tmpl1", str(tmp_path)) is False
     assert list_templates(str(tmp_path)) == []
+
+
+@pytest.mark.parametrize("template_id", ["../outside", "nested/name", "bad.json", "white space"])
+def test_template_id_rejects_path_traversal(template_id, tmp_path):
+    with pytest.raises(ValueError):
+        template_path(template_id, str(tmp_path))

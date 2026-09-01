@@ -21,6 +21,61 @@ from engine.registry import register_block
 log = logging.getLogger(__name__)
 
 
+def write_metadata_package(
+    ctx,
+    media: MediaRef,
+    out_path: str,
+    enc,
+    *,
+    transformation_notes: str,
+    duration: float | None = None,
+) -> dict:
+    """Write rights/metadata sidecars and return their paths."""
+    from core.history import append_history_row
+    from core.manifest import build_default_manifest, save_manifest
+    from core.metadata import VideoMetadata, save_metadata
+
+    out_dir = os.path.dirname(out_path)
+    base = os.path.splitext(os.path.basename(out_path))[0]
+    manifest = build_default_manifest(
+        output_video_path=out_path,
+        source_url=media.source_url,
+        source_title=media.title,
+        transformation_notes=transformation_notes,
+    )
+    manifest_path = save_manifest(manifest, out_dir)
+    meta = VideoMetadata(
+        title=media.title or base,
+        description="",
+        tags=[],
+        pipeline_type="graph",
+        duration_seconds=float(duration if duration is not None else (media.duration or 0)),
+        source_url=media.source_url,
+        source_title=media.title,
+        render_settings={
+            "codec": enc.codec,
+            "fps": enc.fps,
+            "crf": enc.crf,
+            "preset": enc.preset,
+        },
+    )
+    metadata_path = save_metadata(meta, out_dir, base)
+    try:
+        append_history_row(
+            ctx.config.history_csv,
+            pipeline="graph",
+            title=media.title or base,
+            source=media.source_url or media.path,
+            output_path=out_path,
+            manifest_path=manifest_path,
+            metadata_path=metadata_path,
+            status="awaiting_review",
+        )
+    except Exception as exc:  # history is best-effort
+        log.debug("History append failed: %s", exc)
+    return {"manifest_path": manifest_path, "metadata_path": metadata_path}
+
+
 @register_block
 class ExportBlock(PipelineBlock):
     type_id = "export"
@@ -62,10 +117,18 @@ class ExportBlock(PipelineBlock):
         ctx.progress("Rendering MP4", 0.1)
         write_video(clip, out_path, enc, ctx, tag="export")
         ctx.progress("Writing metadata package", 0.85)
-        self._write_package(ctx, media, out_path, enc)
+        package = write_metadata_package(
+            ctx,
+            media,
+            out_path,
+            enc,
+            transformation_notes=self.p("transformation_notes", ""),
+            duration=clip.duration,
+        )
         ctx.progress("Export complete", 1.0)
         return {"video": MediaRef(path=out_path, duration=clip.duration,
-                                  source_url=media.source_url, title=media.title)}
+                                  source_url=media.source_url, title=media.title,
+                                  meta=package)}
 
     # -- helpers ---------------------------------------------------------------
     def _render_draft(self, ctx: ExecutionContext, media: MediaRef, clip) -> MediaRef:
@@ -82,44 +145,11 @@ class ExportBlock(PipelineBlock):
         )
         return MediaRef(path=out_path, duration=draft_clip.duration, title=media.title)
 
-    def _write_package(self, ctx, media, out_path, enc) -> None:
-        from core.history import append_history_row
-        from core.manifest import build_default_manifest, save_manifest
-        from core.metadata import VideoMetadata, save_metadata
-
-        out_dir = os.path.dirname(out_path)
-        base = os.path.splitext(os.path.basename(out_path))[0]
-        manifest = build_default_manifest(
-            output_video_path=out_path,
-            source_url=media.source_url,
-            source_title=media.title,
-            transformation_notes=self.p("transformation_notes", ""),
-        )
-        manifest_path = save_manifest(manifest, out_dir)
-        meta = VideoMetadata(
-            title=media.title or base,
-            description="",
-            tags=[],
-            pipeline_type="graph",
-            duration_seconds=float(getattr(media, "duration", 0) or 0),
-            source_url=media.source_url,
-            source_title=media.title,
-            render_settings={"codec": enc.codec, "fps": enc.fps, "crf": enc.crf,
-                             "preset": enc.preset},
-        )
-        metadata_path = save_metadata(meta, out_dir, base)
-        try:
-            append_history_row(
-                ctx.config.history_csv, pipeline="graph", title=media.title or base,
-                source=media.source_url or media.path, output_path=out_path,
-                manifest_path=manifest_path, metadata_path=metadata_path,
-                status="awaiting_review",
-            )
-        except Exception as exc:  # history is best-effort
-            log.debug("History append failed: %s", exc)
-
     def preview(self, ctx: ExecutionContext, inputs: dict, t: float):
         # Draft render of the whole upstream graph.
         media = inputs["media"]
         clip = load_clip(media)
         return self._render_draft(ctx, media, clip)
+
+
+__all__ = ["ExportBlock", "write_metadata_package"]

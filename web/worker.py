@@ -18,17 +18,14 @@ def run_job(job: Job, cfg: AppConfig, store: JobStore) -> None:
 
     def _run() -> None:
         try:
-            job.status = "running"
-            store.save(job)
+            store.update_job(job.id, status="running")
             if job.is_graph:
                 _run_graph_job(job, cfg, store)
             else:
                 _run_legacy_job(job, cfg, store)
         except Exception as exc:  # noqa: BLE001
             log.exception("Job %s failed", job.id)
-            job.status = "error"
-            job.error_message = str(exc)
-            store.save(job)
+            store.update_job(job.id, status="error", error_message=str(exc))
 
     t = threading.Thread(target=_run, name=f"job-{job.id}", daemon=True)
     t.start()
@@ -51,6 +48,8 @@ def _run_graph_job(job: Job, cfg: AppConfig, store: JobStore) -> None:
     refs = job.source_refs or [None]
     total = max(1, len(refs))
     outputs: list[str] = []
+    manifests: list[str] = []
+    metadata_files: list[str] = []
 
     for i, ref in enumerate(refs):
         overrides = {}
@@ -62,26 +61,45 @@ def _run_graph_job(job: Job, cfg: AppConfig, store: JobStore) -> None:
         def progress_cb(node_id, message, frac, _i=i):
             overall = (_i + frac) / total
             done = message.startswith(("Done", "Export complete", "complete"))
-            job.node_status[node_id] = {
+            node_state = {
                 "status": "done" if done else "running",
                 "message": message, "pct": round(frac * 100, 1),
             }
-            store.update_progress(job.id, f"[{_i + 1}/{total}] [{node_id}] {message}", overall)
+            store.update_progress(
+                job.id,
+                f"[{_i + 1}/{total}] [{node_id}] {message}",
+                overall,
+                node_id=node_id,
+                node_state=node_state,
+            )
 
         executor = GraphExecutor(graph, cfg, progress_cb=progress_cb)
         try:
             result = executor.run(param_overrides=overrides)
         except NodeExecutionError as exc:
-            job.node_status[exc.node_id] = {"status": "error", "message": str(exc.cause), "pct": 0}
+            store.update_node_status(
+                job.id,
+                exc.node_id,
+                {"status": "error", "message": str(exc.cause), "pct": 0},
+            )
             raise
         produced = result.media_paths()
         outputs.extend(produced)
+        artifact_paths = getattr(result, "artifact_paths", lambda _key: [])
+        manifests.extend(artifact_paths("manifest_paths"))
+        metadata_files.extend(artifact_paths("metadata_paths"))
         log.info("Job %s: source %d/%d produced %s", job.id, i + 1, total, produced)
 
-    job.outputs = outputs
-    job.output_path = outputs[0] if outputs else None
-    job.status = "awaiting_review"
-    store.save(job)
+    store.update_job(
+        job.id,
+        outputs=outputs,
+        manifests=manifests,
+        metadata_files=metadata_files,
+        output_path=outputs[0] if outputs else None,
+        manifest_path=manifests[0] if manifests else None,
+        metadata_path=metadata_files[0] if metadata_files else None,
+        status="awaiting_review",
+    )
     log.info("Graph job %s completed → awaiting review (%d outputs)", job.id, len(outputs))
 
 
@@ -97,11 +115,13 @@ def _run_legacy_job(job: Job, cfg: AppConfig, store: JobStore) -> None:
         **job.options,
     )
 
-    job.output_path = result.output_path
-    job.manifest_path = result.manifest_path
-    job.metadata_path = result.metadata_path
-    job.status = "awaiting_review"
-    store.save(job)
+    store.update_job(
+        job.id,
+        output_path=result.output_path,
+        manifest_path=result.manifest_path,
+        metadata_path=result.metadata_path,
+        status="awaiting_review",
+    )
     log.info("Job %s completed → awaiting review", job.id)
 
 

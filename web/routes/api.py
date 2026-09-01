@@ -153,6 +153,28 @@ def validate_graph():
         return jsonify({"ok": False, "error": str(exc)})
 
 
+@bp.post("/agent/plan")
+def agent_plan():
+    """Compile a plain-language editing brief into a validated, editable graph."""
+    from engine.planner import WorkflowPlanner, WorkflowPlanningError
+
+    data = request.get_json(force=True, silent=True) or {}
+    try:
+        plan = WorkflowPlanner(_cfg()).plan(
+            data.get("brief", ""),
+            source=data.get("source", ""),
+            mode=data.get("mode", "auto"),
+            provider=data.get("provider"),
+            model=data.get("model"),
+        )
+        return jsonify(plan.to_dict())
+    except WorkflowPlanningError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except Exception as exc:  # provider/network/schema failures
+        log.exception("agent workflow planning failed")
+        return jsonify({"error": f"Workflow planning failed: {exc}"}), 502
+
+
 @bp.delete("/templates/<template_id>")
 def delete_template(template_id: str):
     from engine.templates import delete_template as _delete
@@ -221,7 +243,7 @@ def preview_draft():
 # --- uploaders & scheduling ---------------------------------------------------
 @bp.get("/uploaders")
 def uploaders():
-    from output.uploaders import uploader_status
+    from publishing.uploaders import uploader_status
 
     return jsonify({"uploaders": uploader_status(_cfg())})
 
@@ -248,12 +270,32 @@ def add_schedule():
     if not sched:
         return jsonify({"error": "scheduler unavailable"}), 503
     data = request.get_json(force=True, silent=True) or {}
-    if not data.get("video_path"):
+    video_path = data.get("video_path")
+    if not isinstance(video_path, str) or not video_path.strip():
         return jsonify({"error": "video_path is required"}), 400
+    job_id = data.get("job_id")
+    if not isinstance(job_id, str) or not job_id.strip():
+        return jsonify({"error": "job_id is required"}), 400
+
+    store = current_app.config["CR_STORE"]
+    if not store.exists(job_id):
+        return jsonify({"error": "job not found"}), 404
+    job = store.load(job_id)
+    if job.status != "approved":
+        return jsonify({"error": "job must be approved before scheduling"}), 409
+
+    allowed_paths = {
+        path
+        for path in [job.output_path, *(job.outputs or [])]
+        if isinstance(path, str) and path
+    }
+    if video_path not in allowed_paths:
+        return jsonify({"error": "video_path is not an output of the approved job"}), 400
+
     fields = {k: data[k] for k in (
         "video_path", "platform", "publish_at", "recurrence",
         "title", "description", "tags", "privacy") if k in data}
-    item = sched.add(**fields)
+    item = sched.add(job_id=job.id, **fields)
     return jsonify(asdict(item))
 
 
@@ -279,17 +321,26 @@ def run_due_schedule():
 # --- run ----------------------------------------------------------------------
 @bp.post("/run")
 def run():
+    from engine.graph import PipelineGraph
     from web.job_store import Job
     from web.worker import run_job
 
     store = current_app.config["CR_STORE"]
     cfg = _cfg()
     data = request.get_json(force=True, silent=True) or {}
+    graph_data = data.get("graph")
+
+    if not isinstance(graph_data, dict):
+        return jsonify({"error": "graph is required and must be an object"}), 400
+    try:
+        graph = PipelineGraph.from_dict(graph_data)
+        graph.validate()
+    except Exception as exc:  # noqa: BLE001 - validation errors are client input
+        return jsonify({"error": str(exc)}), 400
 
     job = Job(
         pipeline_type="graph",
-        graph=data.get("graph"),
-        template_id=data.get("template_id"),
+        graph=graph.to_dict(),
         source_refs=data.get("source_refs") or [],
     )
     store.save(job)

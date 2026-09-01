@@ -58,19 +58,27 @@ class ParamSpec:
             self.label = self.name.replace("_", " ").title()
 
     def coerce(self, value: Any) -> Any:
-        """Best-effort coercion of an incoming value to this param's type."""
+        """Coerce an incoming value and enforce declared choices/ranges."""
         if value is None:
             return self.default
         try:
             if self.type == "int":
-                return int(value)
+                value = int(value)
             if self.type == "float":
-                return float(value)
+                value = float(value)
             if self.type == "bool":
                 if isinstance(value, str):
                     return value.strip().lower() in ("1", "true", "yes", "on")
                 return bool(value)
         except (TypeError, ValueError):
+            return self.default
+        if self.type in ("int", "float"):
+            if self.min is not None:
+                value = max(value, self.min)
+            if self.max is not None:
+                value = min(value, self.max)
+            return int(value) if self.type == "int" else float(value)
+        if self.type == "enum" and value not in (self.choices or []):
             return self.default
         return value
 

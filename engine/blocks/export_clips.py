@@ -16,6 +16,7 @@ import os
 from engine.block import PREVIEW_CLIP, ParamSpec, PipelineBlock, PortSpec
 from engine.blocks._ai import llm_param_specs, llm_text
 from engine.blocks._encode import encode_param_specs, resolve_encode, write_video
+from engine.blocks.export import write_metadata_package
 from engine.clipkit import load_clip
 from engine.context import ExecutionContext
 from engine.ports import MEDIA, MOMENTS, MediaRef, Moments
@@ -104,6 +105,8 @@ class ExportClipsBlock(PipelineBlock):
         enc = resolve_encode(self, base, ctx.config)
         width = max(len(str(len(items))), 2)
         paths = []
+        manifest_paths = []
+        metadata_paths = []
         for i, m in enumerate(items, 1):
             ctx.progress(f"Rendering clip {i}/{len(items)}", i / (len(items) + 1))
             sub = base.subclip(max(0.0, m.start), min(base.duration, m.end))
@@ -114,10 +117,24 @@ class ExportClipsBlock(PipelineBlock):
             out_path = os.path.join(out_dir, f"{prefix}_{i:0{width}d}.mp4")
             write_video(sub, out_path, enc, ctx, tag=f"clip{i}")
             paths.append(out_path)
+            package = write_metadata_package(
+                ctx,
+                media,
+                out_path,
+                enc,
+                transformation_notes=f"Extracted clip {i} of {len(items)} with ViGenX",
+                duration=float(sub.duration or 0),
+            )
+            manifest_paths.append(package["manifest_path"])
+            metadata_paths.append(package["metadata_path"])
 
         ctx.progress("Export clips complete", 1.0)
         first = MediaRef(path=paths[0], duration=None, source_url=media.source_url,
-                         title=media.title, meta={"clips": paths})
+                         title=media.title, meta={
+                             "clips": paths,
+                             "manifest_paths": manifest_paths,
+                             "metadata_paths": metadata_paths,
+                         })
         return {"video": first}
 
     def _draft_first(self, ctx, media, base, moment) -> MediaRef:

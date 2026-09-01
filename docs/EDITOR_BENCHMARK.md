@@ -1,89 +1,80 @@
-# ViGenX Pipeline Editor — Benchmark vs. Best-in-Class DAG / Node Engines
+# ViGenX benchmark: agentic video editing and workflow systems
 
-A practical comparison of the ViGenX graph editor + engine against the node/DAG
-tools people consider best-in-class, plus a prioritized backlog of what to adopt.
+Snapshot date: 2026-09-01. Star counts are approximate and will change. They are
+included as a rough adoption signal, not as a quality score or product target.
 
-## Reference engines
+## Repositories reviewed
 
-| Engine | Domain | Why it's a benchmark |
-|--------|--------|----------------------|
-| **ComfyUI** (LiteGraph.js) | AI media generation | Typed sockets, per-node previews, reroute, groups, huge ecosystem |
-| **n8n** | Workflow automation | Polished UX, run-per-node, data pinning, execution history, error branches |
-| **Node-RED** | IoT / flow-based | Mature flow model, subflows, import/export, palette manager |
-| **Rete.js** | Node-editor framework | Clean plugin arch, typed connections, validation |
-| **Blender** geometry/shader nodes | 3D/procedural | Node groups, frames, muting, live viewport feedback |
-| **Unreal Blueprints** | Game logic | Reroute nodes, comments, collapse-to-function, debugging |
-| **Airflow / Prefect / Dagster** | Data orchestration | Scheduling, retries, backfills, observability, lineage, params |
+| Project | Approx. stars | License | What matters for ViGenX |
+|---|---:|---|---|
+| [n8n](https://github.com/n8n-io/n8n) | 203k | Sustainable Use + Enterprise | Mature visual workflows, templates, approvals, execution history, integrations, and observability. Its product patterns are useful; its code is not permissively licensed. |
+| [ComfyUI](https://github.com/Comfy-Org/ComfyUI) | 131k | GPL-3.0 | JSON node graphs, custom nodes, queues, cached partial execution, subgraphs, and API mode. This is the closest large-scale precedent for an inspectable media workflow ecosystem. |
+| [FFmpeg](https://github.com/FFmpeg/FFmpeg) | 64k | LGPL/GPL depending on build | The deterministic codec, container, and filter layer. ViGenX should generate validated plans that call known operations, never arbitrary model-written shell commands. |
+| [Remotion](https://github.com/remotion-dev/remotion) | 58k | Custom license | Editable React source, composition templates, previews, and batch rendering. The important lesson is to keep an editable artifact in addition to the final MP4. |
+| [LangGraph](https://github.com/langchain-ai/langgraph) | 41k | MIT | Durable state, checkpoints, interrupts, human approval, and tracing. These patterns fit long-running, failure-prone media jobs. |
+| [MoviePy](https://github.com/Zulko/moviepy) | 15k | MIT | A productive Python composition layer. It is convenient, but hot render paths should move toward direct FFmpeg filters where profiling proves the benefit. |
+| [auto-editor](https://github.com/WyattBlue/auto-editor) | 5k | Unlicense | Deterministic audio/motion-based editing and exports to professional editors. Cheap signal processing should precede expensive semantic model calls. |
+| [OpenTimelineIO](https://github.com/AcademySoftwareFoundation/OpenTimelineIO) | 2k | Apache-2.0 | A stable editorial timeline model with adapters. ViGenX eventually needs a timeline/EDL artifact separate from its processing DAG. |
+| [Agentic Video Editor](https://github.com/poseljacob/agentic-video-editor) | 480 | MIT | Direct comparable with typed briefs/plans, director and reviewer stages, bounded revision, manifests, and versioned output. This proves “first agentic video editor” would be a false claim. |
+| [Velorn](https://github.com/VelornLabs/velorn) | 460 | GPL-3.0 | Direct comparable with an editable timeline, ComfyUI bridge, agent tools, preview-first writes, approval, and undo. Agent actions should use the same audited command surface as the UI. |
 
-## Capability matrix
+## Decisions applied in ViGenX
 
-Legend: ✅ have · 🟡 partial · ❌ missing
+1. Keep the existing typed `PipelineGraph`, block registry, executor, and JSON
+   templates. A rewrite would discard the strongest part of the project.
+2. Compile natural language into a constrained workflow document. The model may
+   only select registered block types, declared ports, declared parameters, enum
+   values, and bounded numeric values.
+3. Validate before execution. Generated graphs require exactly one source, a
+   materializing export, valid typed connections, no cycles, and all required
+   inputs.
+4. Keep the generated graph editable and visible. Planning does not silently run
+   a render or publish anything.
+5. Provide a deterministic local planner. Common workflows must remain usable
+   without sending a brief or source media to a model provider.
+6. Persist provenance. The graph stores the brief, planner path, approval
+   requirement, and output sidecars; every exported clip receives a rights
+   manifest and metadata file.
+7. Claim publishing work atomically and require an approved review job. External
+   side effects cannot be retried blindly because a timeout may occur after a
+   platform accepted the upload.
 
-| Capability | ViGenX today | ComfyUI | n8n | Airflow/Dagster |
-|---|---|---|---|---|
-| Typed ports + connection validation | ✅ (`graph.validate`) | ✅ | 🟡 | 🟡 |
-| Visual canvas (pan/zoom/minimap) | ✅ (React Flow) | ✅ | ✅ | 🟡 |
-| Per-node live preview | ✅ (frame/draft) | ✅ | 🟡 (data) | ❌ |
-| Add / connect / **delete** nodes & edges | ✅ | ✅ | ✅ | n/a |
-| Parameter inspector w/ widget types | ✅ | ✅ | ✅ | 🟡 |
-| Templates / save-load graphs | ✅ (JSON) | ✅ | ✅ | ✅ (code) |
-| Batch over many inputs | ✅ (`source_refs`) | 🟡 | ✅ | ✅ |
-| Scheduling / auto-publish | ✅ (scheduler) | ❌ | ✅ | ✅ |
-| **Run-per-node / partial run** | ✅ (draft-from-node + preview) | ✅ | ✅ | ✅ |
-| **Intermediate result caching across runs** | 🟡 (preview cache) | ✅ | 🟡 | ✅ |
-| **Per-node run status overlay on canvas** | ✅ (live SSE coloring) | ✅ | ✅ | ✅ |
-| **Reroute / groups / comments / frames** | ❌ | ✅ | 🟡 | ✅ |
-| **Undo / redo, copy / paste, duplicate** | ✅ (Ctrl+Z/Y/C/V/D) | ✅ | ✅ | n/a |
-| **Search / quick-add node palette** | ✅ (filter + dbl-click) | ✅ | ✅ | n/a |
-| **Graph validation feedback** | ✅ (Validate button) | 🟡 | 🟡 | ✅ |
-| **Auto-layout** | ✅ (topological) | 🟡 | 🟡 | ✅ |
-| **Retries / error branches / on-failure** | ❌ | 🟡 | ✅ | ✅ |
-| **Data pinning / mock inputs** | ❌ | 🟡 | ✅ | ✅ |
-| Subgraphs / collapse-to-block | ❌ | 🟡 | ✅ | ✅ |
-| Versioning / run history / lineage | 🟡 (jobs) | ❌ | ✅ | ✅ |
+## Current position
 
-## Where ViGenX is already strong
-- **Typed DAG with real validation** (cycles, type mismatches, unsatisfied inputs) before a run — stronger than n8n/Node-RED, on par with Rete/Dagster.
-- **WYSIWYG per-node preview** with ancestor memoization — the ComfyUI-class feature most workflow tools lack.
-- **Clip-passing execution** (lazy MoviePy; only `export` writes) — efficient, no per-block re-encode.
-- **Scheduling + batch + auto-publish** baked in — Airflow-class concerns most node editors don't touch.
+ViGenX now covers this bounded loop:
 
-## Gaps & prioritized recommendations
+```text
+brief -> constrained plan -> deterministic validation -> editable graph
+      -> preview/run -> output + provenance -> human review -> optional schedule
+```
 
-### P0 — correctness & core editing — ✅ DONE
-1. **Delete nodes & edges** — ✅ (Delete key, toolbar, inspector).
-2. **Robust preview errors** — ✅ (friendly messages, no `NoneType.get_frame`).
-3. **Undo/redo + copy/paste/duplicate** — ✅ (snapshot stack; Ctrl+Z/Y/C/V/D).
-4. **Node search / quick-add** — ✅ (palette filter + double-click searchable add-menu).
-5. **Auto-layout + Validate button** — ✅ (topological layout; `/api/validate`).
+It does not yet implement a full autonomous inspect/plan/render/quality-review/
+revise loop. It also lacks a professional timeline model, durable intermediate
+cache, subgraphs, plugin discovery, and objective render-quality evaluation.
 
-### P1 — execution engine parity
-6. **Per-node run status on canvas** — ✅ (SSE `node_status` → live running/done/error
-   coloring). Backend [web/routes/jobs.py](web/routes/jobs.py) + [web/worker.py](web/worker.py).
-7. **Run-from-here** — 🟡 partial: per-node **draft** is wired
-   (`executor.draft(node_id=…)`); a full materializing run-from-node (`/api/run` +
-   `target_node`) is the remaining step. ([engine/executor.py](engine/executor.py))
-8. **Persistent intermediate cache** — generalize the preview memo cache to full runs so
-   re-running after a param tweak skips unchanged ancestors (ComfyUI's killer feature).
-   Cache key = `params_hash` in [engine/preview.py](engine/preview.py); add a
-   content-addressed file cache keyed by upstream hashes.
-9. **Retries / on-error policy per node** — add `retries`, `on_error` (`stop|skip|route`)
-   to block params; honor in [engine/executor.py](engine/executor.py) `run`.
+## Next benchmark-driven work
 
-### P2 — scale & authoring ergonomics
-9. **Reroute nodes, groups/frames, comments** — pure React Flow additions; improves large graphs.
-10. **Subgraphs / collapse-to-template** — embed a saved template as a single node
-    (engine: a `SubgraphBlock` that runs a nested `GraphExecutor`).
-11. **Data pinning / mock inputs** — pin a node's output (e.g. a fixed transcript) so
-    downstream iteration skips slow upstream (Whisper/Gemini). Store pins in the graph `meta`.
-12. **Run history & lineage view** — list past jobs per template with inputs/outputs and
-    the rights manifest; partially covered by `output/history.csv` + the jobs store.
-13. **Palette manager / plugin blocks** — auto-discover third-party blocks via entry points
-    (registry already supports `@register_block`; add a plugins dir scan).
+| Priority | Work | Reference pattern |
+|---|---|---|
+| P0 | Tiny licensed video fixtures and prompt-to-graph structural evals | auto-editor, agentic-video-editor |
+| P0 | Bounded render verification and revision, with explicit user approval | LangGraph interrupts/retries |
+| P1 | Content-addressed node cache keyed by input, params, code, and model version | ComfyUI partial execution |
+| P1 | Workflow diff, dry-run resource estimate, and run-from-node | n8n execution UX |
+| P1 | Timeline/EDL model plus OpenTimelineIO export | OpenTimelineIO |
+| P2 | Subgraphs and third-party block entry points | ComfyUI custom nodes |
+| P2 | Direct FFmpeg filter paths for measured render bottlenecks | FFmpeg, auto-editor |
 
-## One-line takeaway
-ViGenX already matches ComfyUI on **typed graphs + per-node preview** and beats most node
-editors on **scheduling/auto-publish**. The biggest gaps are **authoring ergonomics**
-(undo/redo, search-add, reroute/groups) and **execution observability** (on-canvas node
-status, run-from-here, persistent caching, retries) — all incremental additions on the
-current architecture, none requiring a rewrite.
+## License cautions
+
+- Do not copy code from GPL projects into this Apache-2.0 repository without a
+  deliberate license decision.
+- n8n and Remotion are not general-purpose permissive code sources.
+- FFmpeg redistribution obligations depend on the exact build flags and linked
+  codecs. ViGenX invokes a user-installed FFmpeg binary and does not bundle one.
+
+## Adoption metric
+
+One million GitHub stars cannot be engineered or promised. Stars measure
+attention, are easy to distort, and do not prove that users can complete edits.
+The useful release metrics are successful first workflow, validated render rate,
+time to first preview, revision count, crash-free jobs, and contributor retention.

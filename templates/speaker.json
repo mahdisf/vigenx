@@ -37,6 +37,12 @@
       "position": { "x": 960, "y": 200 }
     },
     {
+      "id": "caption_asr",
+      "type_id": "transcribe",
+      "params": { "model": "small", "language": "auto" },
+      "position": { "x": 940, "y": 40 }
+    },
+    {
       "id": "music",
       "type_id": "background_music",
       "params": { "music_volume": 0.15 },
@@ -54,8 +60,9 @@
     { "source": "asr", "source_port": "subtitles", "target": "moments", "target_port": "subtitles" },
     { "source": "src", "source_port": "media", "target": "assemble", "target_port": "media" },
     { "source": "moments", "source_port": "moments", "target": "assemble", "target_port": "moments" },
+    { "source": "assemble", "source_port": "media", "target": "caption_asr", "target_port": "media" },
     { "source": "assemble", "source_port": "media", "target": "subs", "target_port": "media" },
-    { "source": "asr", "source_port": "subtitles", "target": "subs", "target_port": "subtitles" },
+    { "source": "caption_asr", "source_port": "subtitles", "target": "subs", "target_port": "subtitles" },
     { "source": "subs", "source_port": "media", "target": "music", "target_port": "media" },
     { "source": "music", "source_port": "media", "target": "out", "target_port": "media" }
   ]

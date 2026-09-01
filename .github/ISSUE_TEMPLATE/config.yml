@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Design discussion
+    url: https://github.com/mahdisf/vigenx/discussions
+    about: Discuss large architecture or product changes before implementation.
+  - name: Security report
+    url: https://github.com/mahdisf/vigenx/security/advisories/new
+    about: Report vulnerabilities privately.

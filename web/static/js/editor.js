@@ -140,6 +140,9 @@ function Inspector({ node, onParam, graphFor, overridesFor, onDelete, hasSource,
 
   const refreshPreview = useCallback(() => {
     if (!node || s.preview_kind === "none") { setImg(""); return; }
+    if (!hasSource && s.type_id !== "source") {
+      setErr("Pick a source clip to render a preview."); setImg(""); return;
+    }
     const overrides = overridesFor ? overridesFor() : {};
     const body = JSON.stringify({ graph: graphFor(), node_id: node.id, t, overrides });
     fetch("/api/preview/frame", { method: "POST", headers: { "Content-Type": "application/json" }, body })
@@ -148,7 +151,7 @@ function Inspector({ node, onParam, graphFor, overridesFor, onDelete, hasSource,
         setErr(""); setImg(URL.createObjectURL(await r.blob()));
       })
       .catch((e) => setErr(String(e)));
-  }, [node, t, s, graphFor, overridesFor]);
+  }, [node, t, s, graphFor, overridesFor, hasSource]);
 
   function draft() {
     if (!node) return;
@@ -256,6 +259,9 @@ function App() {
   const [gid, setGid] = useState("");
   const [status, setStatus] = useState("");
   const [jobUrl, setJobUrl] = useState("");
+  const [brief, setBrief] = useState("");
+  const [plannerMode, setPlannerMode] = useState("auto");
+  const [planning, setPlanning] = useState(false);
   const [sources, setSources] = useState([]);
   const [showSrc, setShowSrc] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
@@ -534,6 +540,26 @@ function App() {
       });
   }
 
+  function planWorkflow() {
+    const request = brief.trim();
+    if (!request || planning) return;
+    if (nodes.length && !window.confirm("Replace the current workflow with a generated plan?")) return;
+    setPlanning(true); setStatus("Planning workflow..."); setJobUrl("");
+    fetch("/api/agent/plan", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ brief: request, mode: plannerMode, source: srcInput.trim() }),
+    }).then(async (r) => {
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || "Workflow planning failed");
+      return data;
+    }).then((data) => {
+      toFlow(data.graph);
+      const note = (data.warnings || []).length ? ` ${data.warnings.join(" ")}` : "";
+      setStatus(`${data.summary} Planner: ${data.planner}.${note}`);
+    }).catch((err) => setStatus(err.message || String(err)))
+      .finally(() => setPlanning(false));
+  }
+
   // ---- sources ----
   const selectedSources = () => sources.filter((s) => s.selected);
   const previewOverrides = useCallback(() => {
@@ -602,24 +628,42 @@ function App() {
 
   return html`
     <div class="vx-toolbar">
-      <button class="vx-btn ghost" title="Toggle block palette"
-              onClick=${() => setPaletteOpen((o) => !o)}>${paletteOpen ? "◀" : "▶"}</button>
-      <strong>🧩</strong>
-      <input value=${name} onChange=${(e) => setName(e.target.value)} style=${{ width: "160px" }} />
-      <select onChange=${(e) => loadTemplate(e.target.value)} value="">
-        <option value="">Load template…</option>
-        ${templates.map((t) => html`<option key=${t.id} value=${t.id}>${t.name}</option>`)}
-      </select>
-      <button class="vx-btn ghost" title="Undo (Ctrl+Z)" onClick=${undo}>↶</button>
-      <button class="vx-btn ghost" title="Redo (Ctrl+Y)" onClick=${redo}>↷</button>
-      <button class="vx-btn ghost" title="Auto-arrange" onClick=${autoLayout}>⊞ Layout</button>
-      <button class="vx-btn ghost" onClick=${validate}>✓ Validate</button>
-      <button class="vx-btn ghost" onClick=${save}>💾 Save</button>
-      <button class="vx-btn ghost" onClick=${() => setShowSrc(!showSrc)}>🎞 Sources (${selectedSources().length})</button>
-      <button class="vx-btn ghost" disabled=${!selId && !selEdgeIds.length}
-              title="Delete selection (Del)" onClick=${deleteSelection}>🗑</button>
-      <button class="vx-btn" onClick=${run}>▶ Run</button>
-      <span class="vx-muted">${status} ${jobUrl ? html`<a href=${jobUrl} style=${{ color: "#9bf" }}>view job ↗</a>` : null}</span>
+      <div class="vx-agent-bar">
+        <label for="workflow-brief">Describe your edit</label>
+        <input id="workflow-brief" value=${brief}
+               onChange=${(e) => setBrief(e.target.value)}
+               onKeyDown=${(e) => e.key === "Enter" && planWorkflow()}
+               placeholder="Turn this podcast into three vertical clips with captions and music" />
+        <select value=${plannerMode} onChange=${(e) => setPlannerMode(e.target.value)}
+                title="Workflow planner mode">
+          <option value="auto">Auto</option>
+          <option value="local">Local</option>
+          <option value="ai">AI</option>
+        </select>
+        <button class="vx-btn" disabled=${planning || !brief.trim()} onClick=${planWorkflow}>
+          ${planning ? "Planning..." : "Create workflow"}
+        </button>
+      </div>
+      <div class="vx-toolbar-main">
+        <button class="vx-btn ghost" title="Toggle block palette"
+                onClick=${() => setPaletteOpen((o) => !o)}>${paletteOpen ? "◀" : "▶"}</button>
+        <input aria-label="Workflow name" value=${name} onChange=${(e) => setName(e.target.value)}
+               style=${{ width: "160px" }} />
+        <select aria-label="Load template" onChange=${(e) => loadTemplate(e.target.value)} value="">
+          <option value="">Load template...</option>
+          ${templates.map((t) => html`<option key=${t.id} value=${t.id}>${t.name}</option>`)}
+        </select>
+        <button class="vx-btn ghost" title="Undo (Ctrl+Z)" onClick=${undo}>↶</button>
+        <button class="vx-btn ghost" title="Redo (Ctrl+Y)" onClick=${redo}>↷</button>
+        <button class="vx-btn ghost" title="Auto-arrange" onClick=${autoLayout}>Layout</button>
+        <button class="vx-btn ghost" onClick=${validate}>Validate</button>
+        <button class="vx-btn ghost" onClick=${save}>Save</button>
+        <button class="vx-btn ghost" onClick=${() => setShowSrc(!showSrc)}>Sources (${selectedSources().length})</button>
+        <button class="vx-btn ghost" disabled=${!selId && !selEdgeIds.length}
+                title="Delete selection (Del)" onClick=${deleteSelection}>Delete</button>
+        <button class="vx-btn" onClick=${run}>Run</button>
+        <span class="vx-muted" role="status">${status} ${jobUrl ? html`<a href=${jobUrl} style=${{ color: "#9bf" }}>view job ↗</a>` : null}</span>
+      </div>
     </div>
 
     <div class="vx-palette">
@@ -646,7 +690,14 @@ function App() {
         onConnectStart=${onConnectStart} onConnectEnd=${onConnectEnd}
         isValidConnection=${isValidConnection}
         onNodeDragStart=${pushHist} deleteKeyCode=${["Backspace", "Delete"]} fitView>
-        <${Background} /><${Controls} /><${MiniMap} pannable zoomable />
+        <${Background} /><${Controls} />
+        <${MiniMap}
+          pannable
+          zoomable
+          nodeColor="#3a425c"
+          maskColor="rgba(14, 16, 22, 0.72)"
+          style=${{ backgroundColor: "#14161d", border: "1px solid #333b52" }}
+        />
       <//>
       ${nodes.length === 0 ? html`<div class="vx-empty">
         Click a block on the left, double-click here, or load a template to start.</div>` : null}
