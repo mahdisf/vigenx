@@ -8,6 +8,17 @@ updates:
       python-runtime:
         patterns:
           - "*"
+        update-types:
+          - minor
+          - patch
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - version-update:semver-major
+      # PySceneDetect 0.7 is documented upstream as a breaking pre-1.0 release.
+      - dependency-name: scenedetect
+        versions:
+          - ">=0.7"
 
   - package-ecosystem: npm
     directory: /website
@@ -17,6 +28,13 @@ updates:
       website:
         patterns:
           - "*"
+        update-types:
+          - minor
+          - patch
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - version-update:semver-major
 
   - package-ecosystem: github-actions
     directory: /
@@ -26,3 +44,10 @@ updates:
       actions:
         patterns:
           - "*"
+        update-types:
+          - minor
+          - patch
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - version-update:semver-major
